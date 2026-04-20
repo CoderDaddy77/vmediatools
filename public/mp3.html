@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video to MP3 Converter – V Media Tools</title>
+  <meta name="description" content="Convert any video file to MP3 audio right in your browser. Drag and drop, pick bitrate, instant conversion. Your file never leaves your device." />
+  <meta name="keywords" content="video to mp3, convert video to mp3, extract audio, mp3 converter, free mp3 converter, browser converter, client-side" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="/mp3" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="site-brand">
+        <img src="/logo.png" alt="V Media Tools Logo" class="brand-logo" />
+        <span class="brand-name">V Media Tools</span>
+      </a>
+      <nav class="site-nav" id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">All-in-one Media Tools</p>
+      <h1>Video to MP3</h1>
+      <p class="subcopy">
+        Upload any video file to extract high-quality MP3 audio <strong>right in your browser</strong> — your file never leaves your device.
+        Supports MP4, MKV, AVI, MOV, WebM and more.
+      </p>
+    </section>
+
+    <section class="panel">
+      <!-- First-load notice -->
+      <div id="mp3-wasm-notice" class="wasm-notice">
+        📦 <strong>First-time use:</strong> Downloads ~30 MB of the video engine once. After that it&rsquo;s cached and loads instantly.
+      </div>
+
+      <!-- Drop zone — hidden after file is selected -->
+      <div id="mp3-drop-zone" class="drop-zone">
+        <p class="drop-label">📂 Drag your video file here</p>
+        <p class="drop-sublabel">or click to browse — MP4, MKV, AVI, MOV, WebM (max 500 MB)</p>
+        <input type="file" id="mp3-file-input" accept="video/*,.mp4,.mkv,.avi,.mov,.webm,.flv,.wmv,.3gp" hidden />
+      </div>
+
+      <!-- File info — shown after file is loaded -->
+      <div id="mp3-upload-info" class="convert-info hidden">
+        <p id="mp3-upload-filename" class="convert-filename"></p>
+        <p id="mp3-upload-filesize" class="convert-filesize"></p>
+        <button type="button" id="mp3-upload-change-btn" class="secondary" style="margin-top:10px;max-width:180px;">
+          Upload Another
+        </button>
+      </div>
+
+      <div class="controls convert-controls">
+        <div class="control">
+          <label for="mp3-upload-bitrate">MP3 Bitrate</label>
+          <select id="mp3-upload-bitrate">
+            <option value="128">128 kbps</option>
+            <option value="192">192 kbps</option>
+            <option value="256">256 kbps</option>
+            <option value="320" selected>320 kbps (Best)</option>
+          </select>
+        </div>
+        <button type="button" id="mp3-upload-convert-button" class="accent" disabled>
+          🎵 Convert to MP3
+        </button>
+      </div>
+
+      <p id="mp3-status" class="status">Select a video file to begin.</p>
+
+      <div id="mp3-progress-container" class="progress-container hidden">
+        <div class="progress-track">
+          <div id="mp3-progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="mp3-progress-text" class="progress-text">0%</p>
+      </div>
+    </section>
+
+    <section class="note-grid">
+      <article>
+        <h2>How it works</h2>
+        <p>
+          Conversion runs <strong>entirely in your browser</strong> using FFmpeg.wasm (WebAssembly).
+          Your video file never leaves your device — zero upload, zero server processing. Privacy first.
+        </p>
+      </article>
+      <article>
+        <h2>Supported formats</h2>
+        <p>
+          MP4, MKV, AVI, MOV, WebM, FLV, WMV, 3GP and more.
+          Bitrate options: 128, 192, 256, or 320 kbps.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 V Media Tools &mdash; Free &amp; Open Source</p>
+  </footer>
+
+  <script src="/nav.js"></script>
+  <script src="/ffmpeg-loader.js"></script>
+  <script src="/mp3.js"></script>
+  <script>if (history.scrollRestoration) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
+</body>
+
+</html>

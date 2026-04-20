@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About – V Media Tools</title>
+  <meta name="description"
+    content="About V Media Tools — a free, open-source media toolkit. Convert audio, compress images and videos — all in your browser, no upload needed." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="/about" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="site-brand">
+        <img src="/logo.png" alt="V Media Tools Logo" class="brand-logo" />
+        <span class="brand-name">V Media Tools</span>
+      </a>
+      <nav class="site-nav" id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="shell about-shell">
+    <section class="hero">
+      <h1>About V Media Tools</h1>
+    </section>
+
+    <section class="about-content">
+      <div class="about-block">
+        <h2>What is V Media Tools?</h2>
+        <p>
+          V Media Tools is a free, open-source media toolkit built for speed and privacy.
+          Convert audio, compress images and videos — no accounts, no signups, no data uploaded to any server.
+        </p>
+      </div>
+
+      <div class="about-block">
+        <h2>How does it work?</h2>
+        <p>
+          Everything runs <strong>entirely in your browser</strong> using WebAssembly and the Canvas API.
+          Your files never leave your device — no cloud processing, no server uploads.
+          <br><br>
+          <strong>Image Compressor</strong> uses the Canvas API with binary search to hit your target size.<br>
+          <strong>WAV → MP3</strong> and <strong>Video to MP3</strong> use <strong>lamejs</strong> / <strong>FFmpeg.wasm</strong> for in-browser encoding.<br>
+          <strong>Video Compressor</strong> uses <strong>FFmpeg.wasm</strong> (H.264) to process video locally.
+        </p>
+      </div>
+
+      <div class="about-block">
+        <h2>Available tools</h2>
+        <ul>
+          <li><strong>Video to MP3</strong> — Upload any video, extract MP3 audio in your browser.</li>
+          <li><strong>WAV → MP3 Converter</strong> — Convert WAV files to MP3 at your chosen bitrate.</li>
+          <li><strong>Image Compressor</strong> — Compress PNG/JPEG/WebP to a target size in KB.</li>
+          <li><strong>Video Compressor</strong> — Reduce video file size with target MB, %, or CRF control.</li>
+          <li><strong>Image Converter</strong> — Convert between PNG, JPEG, WebP and BMP formats.</li>
+          <li><strong>Images to PDF</strong> — Combine multiple images into a single PDF document.</li>
+          <li><strong>Word to PDF</strong> — Convert DOCX documents to PDF in your browser.</li>
+          <li><strong>PPT to PDF</strong> — Convert PowerPoint presentations to PDF.</li>
+        </ul>
+      </div>
+
+      <div class="about-block">
+        <h2>Is it free?</h2>
+        <p>
+          Yes — 100% free, no ads, no tracking, no hidden costs. Your files are processed locally and never stored anywhere.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 V Media Tools &mdash; Free &amp; Open Source</p>
+  </footer>
+
+  <script src="/nav.js"></script>
+  <script>if (history.scrollRestoration) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
+</body>
+
+</html>
