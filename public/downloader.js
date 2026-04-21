@@ -102,30 +102,18 @@ function startDownload() {
   const url = urlInput.value.trim();
   if (!url || !currentVideoInfo) return;
 
-  const type = typeSelect.value;
-  const quality = qualitySelect.value;
+  const type    = typeSelect.value;
+  const quality = qualitySelect.value; // 'best', '1080', '720', '480', '360'
 
-  // Build format string for yt-dlp
-  let format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
-  if (type === 'video' && quality !== 'best') {
-    format = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}][ext=mp4]/best[height<=${quality}]`;
-  }
+  const downloadUrl = `${RENDER_API}/api/download?` + new URLSearchParams({ url, type, quality });
 
-  const downloadUrl = `${RENDER_API}/api/download?` + new URLSearchParams({
-    url, type, format,
-  }).toString();
+  setStatus(`⬇️ Download started (${type === 'audio' ? 'MP3' : quality === 'best' ? 'Best MP4' : quality + 'p MP4'})… check Downloads folder.`);
 
-  setStatus(`⬇️ Starting download (${type === 'audio' ? 'MP3' : quality === 'best' ? 'Best MP4' : quality + 'p MP4'})…`);
-
-  // Use an anchor tag to trigger browser download
   const a = document.createElement('a');
   a.href = downloadUrl;
-  a.download = type === 'audio'
-    ? (currentVideoInfo.title + '.mp3').replace(/[\/\\:*?"<>|]/g, '_')
-    : (currentVideoInfo.title + '.mp4').replace(/[\/\\:*?"<>|]/g, '_');
+  a.download = (currentVideoInfo.title + (type === 'audio' ? '.mp3' : '.mp4'))
+    .replace(/[\/\\:*?"<>|]/g, '_').slice(0, 200);
   document.body.appendChild(a);
   a.click();
   a.remove();
-
-  setStatus('✅ Download started! Check your downloads folder.');
 }

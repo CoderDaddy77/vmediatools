@@ -86,16 +86,24 @@ changeBtn.addEventListener('click', () => {
 
 // ─── Convert via Render backend ───
 async function convertViaServer(file) {
-  setProgress(10, 'Uploading to server…');
-  setStatus('Uploading file to server (LibreOffice quality)…');
+  setProgress(10, 'Uploading…');
+  setStatus('Uploading file to server…');
 
   const formData = new FormData();
   formData.append('file', file);
+
+  // Show converting status after a short delay (upload finishes, LibreOffice starts)
+  const convertingTimer = setTimeout(() => {
+    setProgress(40, 'Converting with LibreOffice…');
+    setStatus('Server is converting your PPTX → PDF…');
+  }, 1500);
 
   const response = await fetch(`${RENDER_API}/api/ppt-to-pdf`, {
     method: 'POST',
     body: formData,
   });
+
+  clearTimeout(convertingTimer);
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({ error: 'Server error' }));
@@ -103,6 +111,7 @@ async function convertViaServer(file) {
   }
 
   setProgress(80, 'Downloading PDF…');
+  setStatus('Preparing download…');
 
   const blob = await response.blob();
   const outputName = file.name.replace(/\.pptx$/i, '.pdf');
@@ -115,9 +124,9 @@ async function convertViaServer(file) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-  setProgress(100, 'Complete!');
-  setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — converted via LibreOffice`);
-  setTimeout(resetProgress, 4000);
+  setProgress(100, 'Done!');
+  setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
+  setTimeout(resetProgress, 3000);
 }
 
 // ─── Client-side fallback (Canvas + jsPDF) ───

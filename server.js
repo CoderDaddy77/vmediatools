@@ -163,51 +163,62 @@ app.get('/api/info', async (req, res) => {
   });
 });
 
-// ─── Video Download (stream via yt-dlp) ───
+// ─── Video Download (spawn for true streaming — no buffer limit) ───
 app.get('/api/download', (req, res) => {
-  const { url, format = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', type = 'video' } = req.query;
+  const { url, type = 'video', quality = 'best' } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url parameter.' });
 
   try { new URL(url); } catch { return res.status(400).json({ error: 'Invalid URL.' }); }
 
-  const safeUrl = url.replace(/"/g, '');
-  const safeFormat = format.replace(/[^a-zA-Z0-9\[\]+./\-_]/g, '');
+  const safeUrl = url.replace(/"/g, '').replace(/'/g, '');
 
-  // YouTube bot bypass flags
-  const ytFlags = `--extractor-args "youtube:player_client=ios,mweb" --no-check-certificates`;
-  // Build yt-dlp command — with YouTube bot bypass
-  // -o - : output to stdout so we can stream it
-  const cmd = type === 'audio'
-    ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o - --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`
-    : `yt-dlp -f "${safeFormat}" -o - --no-playlist --no-warnings --merge-output-format mp4 ${ytFlags} "${safeUrl}"`;
+  // Build format based on quality
+  let formatStr;
+  if (type === 'audio') {
+    formatStr = 'bestaudio/best';
+  } else if (quality === 'best') {
+    formatStr = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best';
+  } else {
+    formatStr = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}]/best`;
+  }
 
-  const ext = type === 'audio' ? 'mp3' : 'mp4';
+  const ext  = type === 'audio' ? 'mp3' : 'mp4';
   const mime = type === 'audio' ? 'audio/mpeg' : 'video/mp4';
+
+  // Use spawn (not exec) — exec buffers everything, breaks large files
+  const { spawn } = require('child_process');
+
+  const args = type === 'audio'
+    ? ['-f', 'bestaudio', '-x', '--audio-format', 'mp3', '--audio-quality', '0',
+       '--no-playlist', '--no-warnings',
+       '--extractor-args', 'youtube:player_client=ios,mweb',
+       '--no-check-certificates', '-o', '-', safeUrl]
+    : ['-f', formatStr, '--no-playlist', '--no-warnings',
+       '--merge-output-format', 'mp4',
+       '--extractor-args', 'youtube:player_client=ios,mweb',
+       '--no-check-certificates', '-o', '-', safeUrl];
+
+  console.log('[download]', type, quality, safeUrl.slice(0, 80));
+
+  const child = spawn('yt-dlp', args);
 
   res.setHeader('Content-Type', mime);
   res.setHeader('Content-Disposition', `attachment; filename="download.${ext}"`);
-  res.setHeader('Transfer-Encoding', 'chunked');
-
-  const child = exec(cmd, { maxBuffer: 1024 * 1024 * 500 }); // 500MB buffer
+  res.setHeader('Cache-Control', 'no-cache');
 
   child.stdout.pipe(res);
+  child.stderr.on('data', d => process.stdout.write('[yt-dlp] ' + d));
 
-  child.stderr.on('data', (data) => {
-    // Log progress to server console only (not sent to client)
-    process.stdout.write('[yt-dlp] ' + data);
-  });
-
-  child.on('error', (err) => {
-    console.error('[download] spawn error:', err.message);
+  child.on('error', err => {
+    console.error('[download] error:', err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
   });
 
-  child.on('close', (code) => {
-    if (code !== 0) console.warn('[download] yt-dlp exited with code', code);
-    res.end();
+  child.on('close', code => {
+    if (code !== 0) console.warn('[download] yt-dlp exit code:', code);
+    if (!res.writableEnded) res.end();
   });
 
-  // If client disconnects, kill yt-dlp
   req.on('close', () => { try { child.kill('SIGTERM'); } catch {} });
 });
 
