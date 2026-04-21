@@ -5,11 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About – V Media Tools</title>
-  <meta name="description"
-    content="About V Media Tools — a free, open-source media toolkit. Convert audio, compress images and videos — all in your browser, no upload needed." />
+  <meta name="description" content="V Media Tools — free browser-based media toolkit by Mr B." />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="/about" />
   <link rel="stylesheet" href="/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet" />
 </head>
 
 <body>
@@ -24,60 +24,49 @@
   </header>
 
   <main class="shell about-shell">
-    <section class="hero">
-      <h1>About V Media Tools</h1>
+
+    <!-- Developer card -->
+    <section style="padding: 32px 0 28px; text-align: center; border-bottom: 1px solid var(--line); margin-bottom: 32px;">
+      <p style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px;">Developer</p>
+      <h1 style="font-size: 1.1rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text); margin: 0 0 16px;">Mr B</h1>
+      <a href="https://slashofficial.web.app" target="_blank" rel="noopener noreferrer"
+         style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px;
+                border: 1.5px solid var(--line); border-radius: 8px;
+                font-size: 0.83rem; font-weight: 600; color: var(--muted);
+                text-decoration: none; transition: all 150ms;">
+        slashofficial.web.app ↗
+      </a>
     </section>
 
-    <section class="about-content">
-      <div class="about-block">
-        <h2>What is V Media Tools?</h2>
-        <p>
-          V Media Tools is a free, open-source media toolkit built for speed and privacy.
-          Convert audio, compress images and videos — no accounts, no signups, no data uploaded to any server.
-        </p>
-      </div>
-
-      <div class="about-block">
-        <h2>How does it work?</h2>
-        <p>
-          Everything runs <strong>entirely in your browser</strong> using WebAssembly and the Canvas API.
-          Your files never leave your device — no cloud processing, no server uploads.
-          <br><br>
-          <strong>Image Compressor</strong> uses the Canvas API with binary search to hit your target size.<br>
-          <strong>WAV → MP3</strong> and <strong>Video to MP3</strong> use <strong>lamejs</strong> / <strong>FFmpeg.wasm</strong> for in-browser encoding.<br>
-          <strong>Video Compressor</strong> uses <strong>FFmpeg.wasm</strong> (H.264) to process video locally.
-        </p>
-      </div>
-
-      <div class="about-block">
-        <h2>Available tools</h2>
-        <ul>
-          <li><strong>Video to MP3</strong> — Upload any video, extract MP3 audio in your browser.</li>
-          <li><strong>WAV → MP3 Converter</strong> — Convert WAV files to MP3 at your chosen bitrate.</li>
-          <li><strong>Image Compressor</strong> — Compress PNG/JPEG/WebP to a target size in KB.</li>
-          <li><strong>Video Compressor</strong> — Reduce video file size with target MB, %, or CRF control.</li>
-          <li><strong>Image Converter</strong> — Convert between PNG, JPEG, WebP and BMP formats.</li>
-          <li><strong>Images to PDF</strong> — Combine multiple images into a single PDF document.</li>
-          <li><strong>Word to PDF</strong> — Convert DOCX documents to PDF in your browser.</li>
-          <li><strong>PPT to PDF</strong> — Convert PowerPoint presentations to PDF.</li>
+    <!-- Tools section -->
+    <section class="about-content" style="display: flex; flex-direction: column; gap: 24px; padding-bottom: 40px;">
+      <div class="about-block" style="background: rgba(0,0,0,0.02); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px;">
+        <h2 style="font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px;">Available tools</h2>
+        <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--text);">
+          <li><strong>Video Downloader</strong> — YouTube, Instagram, TikTok &amp; 1000+ sites.</li>
+          <li><strong>Video to MP3</strong> — Extract audio from any video.</li>
+          <li><strong>WAV → MP3</strong> — Convert WAV to MP3 at any bitrate.</li>
+          <li><strong>Image Compressor</strong> — Compress to a target file size.</li>
+          <li><strong>Video Compressor</strong> — Shrink video with FFmpeg.wasm.</li>
+          <li><strong>Image Converter</strong> — PNG, JPEG, WebP and BMP.</li>
+          <li><strong>Images to PDF</strong> — Merge images into one PDF.</li>
+          <li><strong>Word to PDF</strong> — DOCX to PDF conversion.</li>
+          <li><strong>PPT to PDF</strong> — PowerPoint to PDF.</li>
         </ul>
       </div>
 
-      <div class="about-block">
-        <h2>Is it free?</h2>
-        <p>
-          Yes — 100% free, no ads, no tracking, no hidden costs. Your files are processed locally and never stored anywhere.
-        </p>
+      <div class="about-block" style="background: rgba(0,0,0,0.02); border: 1px solid var(--line); border-radius: 14px; padding: 20px 24px;">
+        <h2 style="font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px;">Privacy</h2>
+        <p style="margin: 0; font-size: 0.9rem; line-height: 1.6; color: var(--muted);">Client-side tools never upload your files. Server-side tools process on a secure backend and return the result immediately — nothing is stored.</p>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>&copy; 2026 V Media Tools &mdash; Free &amp; Open Source</p>
+    <p>&copy; 2026 V Media Tools &mdash; Built by Mr B</p>
   </footer>
 
   <script src="/nav.js"></script>
-  <script>if (history.scrollRestoration) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
 </body>
 
 </html>
