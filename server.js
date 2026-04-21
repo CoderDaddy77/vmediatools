@@ -23,11 +23,12 @@ const PORT = process.env.PORT || 3000;
 
 // ─── Allowed origins ───
 const ALLOWED_ORIGINS = [
+  'https://vmediatools.web.app',
+  'https://vmediatools.firebaseapp.com',
   'https://vera-media-tools.web.app',
   'https://vera-media-tools.firebaseapp.com',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  // Add your custom domain here if you have one
 ];
 
 app.use(cors({
