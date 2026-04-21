@@ -55,19 +55,18 @@
       .nav-dd-arrow { font-size: 0.6rem; opacity: 0.55; transition: transform 200ms; }
       .nav-dd-btn[aria-expanded="true"] .nav-dd-arrow { transform: rotate(180deg); }
 
-      /* ── Dropdown panel ── */
+      /* ── Dropdown panel — position: fixed so overflow on nav never clips it ── */
       .nav-dd-menu {
-        display: none; position: absolute; top: calc(100% + 8px);
-        left: 50%; transform: translateX(-50%);
+        display: none; position: fixed;
         background: #fff; border: 1px solid var(--line);
         border-radius: 14px; padding: 6px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
-        min-width: 210px; z-index: 300;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+        min-width: 210px; z-index: 9999;
         animation: ddIn 160ms ease;
       }
       @keyframes ddIn {
-        from { opacity:0; transform: translateX(-50%) translateY(-6px); }
-        to   { opacity:1; transform: translateX(-50%) translateY(0); }
+        from { opacity:0; transform: translateY(-6px); }
+        to   { opacity:1; transform: translateY(0); }
       }
       .nav-dd-menu.open { display: block; }
 
@@ -129,27 +128,39 @@
 
       /* ── Mobile ── */
       @media (max-width: 760px) {
-        .nav-dd-menu {
-          left: auto; right: 0; transform: none;
-          animation: ddInMobile 160ms ease;
-        }
-        @keyframes ddInMobile {
-          from { opacity:0; transform: translateY(-6px); }
-          to   { opacity:1; transform: translateY(0); }
-        }
-        .server-status-label { display: none; }
-        .server-status { padding: 4px 7px; margin-left: 2px; }
+        .nav-dd-btn { padding: 5px 6px; font-size: 0.78rem; }
+        .nav-link { padding: 5px 6px; font-size: 0.78rem; }
+        .server-status { padding: 3px 6px; margin-left: 1px; font-size: 0.62rem; gap: 4px; }
+        .server-status-dot { width: 6px; height: 6px; }
         #main-nav {
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: none;
           flex-wrap: nowrap;
-          gap: 2px;
+          gap: 0px;
         }
         #main-nav::-webkit-scrollbar { display: none; }
       }
     `;
     document.head.appendChild(s);
+  }
+
+  // ─── Helper: position menu below its button (works with fixed positioning) ───
+  function positionMenu(btn, menu) {
+    const r = btn.getBoundingClientRect();
+    const vw = window.innerWidth;
+    menu.style.top  = (r.bottom + 6) + 'px';
+    menu.style.left = '0'; // temporary
+    menu.style.right = 'auto';
+
+    requestAnimationFrame(() => {
+      const mw = menu.offsetWidth;
+      // Center under button, clamp to viewport
+      let left = r.left + r.width / 2 - mw / 2;
+      if (left + mw > vw - 8) left = vw - mw - 8;
+      if (left < 8) left = 8;
+      menu.style.left = left + 'px';
+    });
   }
 
   // ─── Helper: build dropdown ───
@@ -172,7 +183,6 @@
       a.href = item.href;
       a.className = 'nav-dd-item' + (currentPath === item.href ? ' active' : '');
       a.innerHTML = `<span class="nav-dd-item-label">${item.label}</span>`;
-      // Small dot for Render-dependent tools (state updated later)
       if (item.render) {
         const dot = document.createElement('span');
         dot.className = 'nav-dd-render-dot';
@@ -182,14 +192,25 @@
       menu.appendChild(a);
     });
 
+    // Append menu to body so it's never clipped by any ancestor overflow
+    document.body.appendChild(menu);
+
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const open = menu.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open);
-      // close other dropdowns
+      const willOpen = !menu.classList.contains('open');
+
+      // Close all open menus
       document.querySelectorAll('.nav-dd-menu.open').forEach(m => {
-        if (m !== menu) { m.classList.remove('open'); m.previousElementSibling?.setAttribute('aria-expanded','false'); }
+        m.classList.remove('open');
+        m.dataset.btnEl?.setAttribute && document.querySelector('[data-btn-for="' + m.dataset.btnId + '"]')?.setAttribute('aria-expanded', 'false');
       });
+      document.querySelectorAll('.nav-dd-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+
+      if (willOpen) {
+        positionMenu(btn, menu);
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
     });
 
     document.addEventListener('click', () => {
@@ -197,10 +218,15 @@
       btn.setAttribute('aria-expanded', 'false');
     });
 
+    // Reposition on scroll/resize while open
+    window.addEventListener('scroll', () => {
+      if (menu.classList.contains('open')) positionMenu(btn, menu);
+    }, { passive: true });
+
     wrapper.appendChild(btn);
-    wrapper.appendChild(menu);
-    return wrapper;
+    return wrapper;  // menu is now in body, not wrapper
   }
+
 
   // ─── Build nav ───
   // (Home link removed — brand logo/name already links to /)

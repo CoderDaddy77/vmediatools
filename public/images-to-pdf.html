@@ -64,10 +64,14 @@
             <label for="img2pdf-margin">Margin</label>
             <select id="img2pdf-margin">
               <option value="0">No Margin</option>
-              <option value="10" selected>Small (10px)</option>
-              <option value="20">Medium (20px)</option>
-              <option value="40">Large (40px)</option>
+              <option value="10" selected>Small</option>
+              <option value="20">Medium</option>
+              <option value="40">Large</option>
             </select>
+          </div>
+          <div class="control" style="flex:0 1 auto; min-width:150px;">
+            <label for="img2pdf-quality">Quality: <span id="img2pdf-quality-val">100</span>%</label>
+            <input type="range" id="img2pdf-quality" min="40" max="100" value="100" style="padding:0; border:none; background:none;" />
           </div>
           <button type="button" id="img2pdf-btn" class="accent">
             📄 Generate PDF
@@ -78,20 +82,17 @@
       <p id="img2pdf-status" class="status">Select images to begin.</p>
     </section>
 
-    <section class="note-grid">
-      <article>
-        <h2>How it works</h2>
-        <p>
-          Each image becomes a page in the PDF. Drag to reorder. Everything runs <strong>entirely in your browser</strong> — no files are uploaded anywhere.
-        </p>
-      </article>
-      <article>
-        <h2>Supported formats</h2>
-        <p>
-          PNG, JPEG, WebP, BMP. You can mix different formats in a single PDF. Images are scaled to fit the page size.
-        </p>
-      </article>
-    </section>
+    <div class="how-to-use">
+      <div class="htu-step">
+        <strong>Upload &amp; Arrange</strong>
+        <span>Drop images, drag to reorder, pick page size and margin</span>
+      </div>
+      <div class="htu-step">
+        <strong>Generate &amp; Download</strong>
+        <span>Click Generate PDF — downloads to your device instantly</span>
+      </div>
+    </div>
+
   </main>
 
   <footer class="site-footer">

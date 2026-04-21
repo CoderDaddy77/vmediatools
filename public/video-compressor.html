@@ -34,8 +34,11 @@
 
     <section class="panel">
       <!-- First-load notice -->
+      <div class="vc-pc-warning">
+        ⚠️ <strong>PC only.</strong> This tool uses FFmpeg.wasm which requires a modern desktop browser. On mobile it will be extremely slow or may crash — use a PC.
+      </div>
       <div id="vc-wasm-notice" class="wasm-notice">
-        📦 <strong>First-time use:</strong> Downloads ~30 MB of the video engine once. After that it&rsquo;s cached and loads instantly.
+        📦 <strong>First-time use:</strong> Downloads ~30 MB of the video engine once. Cached after that.
       </div>
 
       <!-- Upload Source -->
@@ -157,20 +160,17 @@
       </div>
     </section>
 
-    <section class="note-grid">
-      <article>
-        <h2>How it works</h2>
-        <p>
-          Video compression runs <strong>entirely in your browser</strong> using WebAssembly (FFmpeg.wasm). Your file never leaves your device — zero upload, zero server processing. Privacy first.
-        </p>
-      </article>
-      <article>
-        <h2>Which mode to pick?</h2>
-        <p>
-          <strong>Target MB</strong> — set an exact size limit. <strong>Reduce %</strong> — shrink by a percentage of the original. <strong>Manual CRF</strong> — fine control: lower CRF = better quality, higher CRF = smaller file.
-        </p>
-      </article>
-    </section>
+    <div class="how-to-use">
+      <div class="htu-step">
+        <strong>Upload &amp; Pick Mode</strong>
+        <span>Drop video, choose Target MB / Reduce % / Manual CRF</span>
+      </div>
+      <div class="htu-step">
+        <strong>Compress &amp; Download</strong>
+        <span>Runs entirely in browser — file never leaves your device</span>
+      </div>
+    </div>
+
   </main>
 
   <footer class="site-footer">
