@@ -84,36 +84,12 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
   flex-shrink: 1;
   min-width: 0;
-}
-.site-nav::-webkit-scrollbar { display: none; }
-
-.nav-link {
-  padding: 5px 10px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--muted);
-  transition: color 150ms ease, background 150ms ease;
-  white-space: nowrap;
-  flex-shrink: 0;
+  overflow: visible;
 }
 
-.nav-link:hover {
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.nav-link.active {
-  color: var(--text);
-  font-weight: 600;
-}
+/* nav-link, nav-dd-btn etc. are injected by nav.js */
 
 /* ═══ STATUS INDICATOR ═══ */
 .status-indicator {
@@ -1032,19 +1008,17 @@ button:disabled {
     height: 24px;
   }
 
-  /* Nav scrolls horizontally on mobile — no wrapping, no height increase */
+  /* Nav stays in single row on mobile — dropdowns open downward */
   .site-nav {
     flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: 1px;
-    margin-left: 8px;
+    overflow: visible;
+    gap: 2px;
+    margin-left: 4px;
     padding: 0;
+    flex-shrink: 1;
+    min-width: 0;
   }
 
-  .nav-link {
-    padding: 5px 8px;
-    font-size: 0.75rem;
-  }
 
   /* remove home-hero gap */
   .home-hero-compact {
