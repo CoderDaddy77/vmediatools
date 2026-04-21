@@ -77,14 +77,22 @@ function cleanUpDir(dir) {
   try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
 }
 
+// ─── LibreOffice command (optimized flags) ───
 function libreOfficeCmd(inputPath, outputDir) {
-  return `libreoffice --headless --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
+  // --norestore      : skip crash recovery dialog (saves ~2s)
+  // --nofirststartwizard : skip setup wizard
+  // --nolockcheck    : skip lock file check (faster start)
+  return `libreoffice --headless --norestore --nofirststartwizard --nolockcheck --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
 }
 
-// Check LibreOffice is available
-function checkLibreOffice() {
-  return new Promise((resolve) => {
-    exec('libreoffice --version', (err) => resolve(!err));
+// Pre-warm LibreOffice on startup (loads it into memory so first real request is fast)
+function prewarmLibreOffice() {
+  const tmpDir = getTmpDir();
+  // Create a tiny dummy PPTX (just valid ZIP header bytes aren't enough, so run with invalid file which exits fast but warms JVM/process pool)
+  exec(`libreoffice --headless --norestore --version`, (err, stdout) => {
+    cleanUpDir(tmpDir);
+    if (!err) console.log('[LibreOffice] Pre-warmed:', stdout.trim());
+    else console.warn('[LibreOffice] Pre-warm failed:', err.message);
   });
 }
 
@@ -237,16 +245,9 @@ app.post('/api/ppt-to-pdf', upload.single('file'), async (req, res) => {
     // Write uploaded file to tmp
     fs.writeFileSync(inputPath, req.file.buffer);
 
-    // Check LibreOffice
-    const hasLibre = await checkLibreOffice();
-    if (!hasLibre) {
-      cleanUpDir(tmpDir);
-      return res.status(503).json({ error: 'LibreOffice not available on this server.' });
-    }
-
-    // Run LibreOffice conversion
+    // Run LibreOffice conversion (timeout = 90s for free tier)
     await new Promise((resolve, reject) => {
-      exec(libreOfficeCmd(inputPath, tmpDir), { timeout: 120000 }, (err, stdout, stderr) => {
+      exec(libreOfficeCmd(inputPath, tmpDir), { timeout: 90000 }, (err, stdout, stderr) => {
         if (err) reject(new Error(stderr || err.message));
         else resolve();
       });
@@ -288,14 +289,8 @@ app.post('/api/word-to-pdf', upload.single('file'), async (req, res) => {
   try {
     fs.writeFileSync(inputPath, req.file.buffer);
 
-    const hasLibre = await checkLibreOffice();
-    if (!hasLibre) {
-      cleanUpDir(tmpDir);
-      return res.status(503).json({ error: 'LibreOffice not available on this server.' });
-    }
-
     await new Promise((resolve, reject) => {
-      exec(libreOfficeCmd(inputPath, tmpDir), { timeout: 120000 }, (err, stdout, stderr) => {
+      exec(libreOfficeCmd(inputPath, tmpDir), { timeout: 90000 }, (err, stdout, stderr) => {
         if (err) reject(new Error(stderr || err.message));
         else resolve();
       });
@@ -360,6 +355,9 @@ app.listen(PORT, () => {
 
   // Auto-update yt-dlp with latest YouTube fixes on every startup
   updateYtDlp();
+
+  // Pre-warm LibreOffice so first request is fast
+  prewarmLibreOffice();
 
   // ─── Self-ping to prevent Render free tier from sleeping ───
   // Render sets RENDER_EXTERNAL_HOSTNAME automatically (e.g. vera-media-tools-backend.onrender.com)

@@ -84,55 +84,90 @@ changeBtn.addEventListener('click', () => {
   setStatus('Select a PPTX file to begin.');
 });
 
-// ─── Convert via Render backend ───
-async function convertViaServer(file) {
-  setProgress(10, 'Uploading…');
-  setStatus('Uploading file to server…');
+// ─── Convert via Render backend (XHR for real upload progress) ───
+function convertViaServer(file) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const formData = new FormData();
-  formData.append('file', file);
+    const xhr = new XMLHttpRequest();
 
-  // Show converting status after a short delay (upload finishes, LibreOffice starts)
-  const convertingTimer = setTimeout(() => {
-    setProgress(40, 'Converting with LibreOffice…');
-    setStatus('Server is converting your PPTX → PDF…');
-  }, 1500);
+    // Real upload progress
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 45) + 5; // 5–50%
+        setProgress(pct, `Uploading… ${Math.round(e.loaded/1048576)}/${Math.round(e.total/1048576)} MB`);
+      }
+    });
 
-  const response = await fetch(`${RENDER_API}/api/ppt-to-pdf`, {
-    method: 'POST',
-    body: formData,
+    xhr.upload.addEventListener('load', () => {
+      setProgress(55, 'Converting with LibreOffice…');
+      setStatus('Server is converting PPTX → PDF…');
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 200) {
+        setProgress(85, 'Downloading PDF…');
+        setStatus('Preparing download…');
+        const blob = new Blob([xhr.response], { type: 'application/pdf' });
+        const outputName = file.name.replace(/\.pptx$/i, '.pdf');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = outputName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        setProgress(100, 'Done!');
+        setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
+        setTimeout(resetProgress, 3000);
+        resolve();
+      } else {
+        let msg = `Server error ${xhr.status}`;
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+        reject(new Error(msg));
+      }
+    });
+
+    xhr.addEventListener('error', () => reject(new Error('Network error — server unreachable')));
+    xhr.addEventListener('timeout', () => reject(new Error('Server timed out')));
+
+    xhr.open('POST', `${RENDER_API}/api/ppt-to-pdf`);
+    xhr.responseType = 'arraybuffer';
+    xhr.timeout = 120000; // 2 min max
+    xhr.send(formData);
+
+    setProgress(5, 'Uploading…');
+    setStatus('Uploading to server…');
   });
+}
 
-  clearTimeout(convertingTimer);
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Server error' }));
-    throw new Error(err.error || `Server returned ${response.status}`);
+// ─── Ensure jsPDF is loaded (with CDN fallback) ───
+async function ensureJsPDF() {
+  if (window.jspdf && window.jspdf.jsPDF) return;
+  // Try fallback CDNs
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+    'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+  ];
+  for (const cdn of cdns) {
+    try {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = cdn; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      if (window.jspdf && window.jspdf.jsPDF) return;
+    } catch {}
   }
-
-  setProgress(80, 'Downloading PDF…');
-  setStatus('Preparing download…');
-
-  const blob = await response.blob();
-  const outputName = file.name.replace(/\.pptx$/i, '.pdf');
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = outputName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-  setProgress(100, 'Done!');
-  setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
-  setTimeout(resetProgress, 3000);
+  throw new Error('Could not load PDF library. Check your internet connection.');
 }
 
 // ─── Client-side fallback (Canvas + jsPDF) ───
 async function convertClientSide(file) {
   setProgress(5, 'Reading file…');
   setStatus('Converting in browser (client-side)…');
+
+  await ensureJsPDF();
 
   const arrayBuffer = await file.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
@@ -298,14 +333,22 @@ convertBtn.addEventListener('click', async () => {
   convertBtn.disabled = true;
   changeBtn.disabled = true;
 
+  const fileSizeMB = selectedFile.size / 1048576;
+
   try {
-    // Try Render backend first (better quality via LibreOffice)
-    try {
-      await convertViaServer(selectedFile);
-    } catch (serverErr) {
-      console.warn('Server conversion failed, falling back to browser:', serverErr.message);
-      setStatus('Server busy, switching to browser mode…');
+    // Files >28MB on Render free tier will likely OOM — go direct to browser
+    if (fileSizeMB > 28) {
+      setStatus(`⚠️ Large file (${fileSizeMB.toFixed(1)} MB) — converting in browser directly…`);
       await convertClientSide(selectedFile);
+    } else {
+      try {
+        await convertViaServer(selectedFile);
+      } catch (serverErr) {
+        console.warn('Server failed, falling back to browser:', serverErr.message);
+        setStatus(`Server unavailable — switching to browser mode…`);
+        setProgress(0, '');
+        await convertClientSide(selectedFile);
+      }
     }
   } catch (err) {
     setStatus('Conversion failed: ' + (err.message || err), true);
