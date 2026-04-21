@@ -91,7 +91,6 @@ function libreOfficeCmd(inputPath, outputDir) {
 
 // ─── Routes ───
 
-// Health check (no yt-dlp version exec — keep it fast)
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'ok',
@@ -109,13 +108,10 @@ app.get('/api/info', async (req, res) => {
 
   const safeUrl = url.replace(/"/g, '');
 
-  // YouTube bot bypass: tv_embedded+web is most reliable combo in 2025
-  // android/ios are heavily fingerprinted and blocked by Google
   const ytFlags = [
-    '--extractor-args', 'youtube:player_client=tv_embedded,web',
     '--no-check-certificates',
-    '--extractor-retries', '3',
-    '--socket-timeout', '20',
+    '--extractor-retries', '2',
+    '--socket-timeout', '20'
   ].join(' ');
   const cmd = `yt-dlp --dump-json --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`;
 
@@ -156,7 +152,7 @@ app.get('/api/info', async (req, res) => {
   });
 });
 
-// ─── Video Download (spawn for true streaming — no buffer limit) ───
+// ─── Video Download (spawn for tru streaming — no buffer limit) ───
 app.get('/api/download', (req, res) => {
   const { url, type = 'video', quality = 'best' } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url parameter.' });
@@ -187,15 +183,11 @@ app.get('/api/download', (req, res) => {
 
   const args = type === 'audio'
     ? ['-f', 'bestaudio/best', '-x', '--audio-format', 'mp3', '--audio-quality', '0',
-      '--no-playlist', '--no-warnings',
-      '--extractor-args', 'youtube:player_client=tv_embedded,web',
-      '--no-check-certificates', '--extractor-retries', '3',
-      '-o', '-', safeUrl]
+      '--no-playlist', '--no-warnings', '--no-check-certificates',
+      '--extractor-retries', '2', '-o', '-', safeUrl]
     : ['-f', formatStr, '--no-playlist', '--no-warnings',
-      '--merge-output-format', 'mp4',
-      '--extractor-args', 'youtube:player_client=tv_embedded,web',
-      '--no-check-certificates', '--extractor-retries', '3',
-      '-o', '-', safeUrl];
+      '--merge-output-format', 'mp4', '--no-check-certificates',
+      '--extractor-retries', '2', '-o', '-', safeUrl];
 
   console.log('[download]', type, quality, safeUrl.slice(0, 80));
 
