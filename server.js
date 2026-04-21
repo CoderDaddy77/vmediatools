@@ -87,11 +87,29 @@ function checkLibreOffice() {
   });
 }
 
+// ─── Auto-update yt-dlp on startup ───
+// yt-dlp updates very frequently (YouTube changes often) — always run latest
+function updateYtDlp() {
+  console.log('[yt-dlp] Checking for updates…');
+  exec('pip3 install --break-system-packages --upgrade yt-dlp', (err, stdout) => {
+    if (err) { console.warn('[yt-dlp] Update failed:', err.message); return; }
+    const line = stdout.split('\n').filter(l => l.includes('yt-dlp')).pop() || 'done';
+    console.log('[yt-dlp] Update result:', line.trim());
+  });
+}
+
 // ─── Routes ───
 
 // Health check
 app.get('/api/status', (req, res) => {
-  res.json({ status: 'ok', service: 'vera-media-tools-backend', uptime: process.uptime() });
+  exec('yt-dlp --version', (err, stdout) => {
+    res.json({
+      status: 'ok',
+      service: 'vera-media-tools-backend',
+      uptime: process.uptime(),
+      ytdlp: stdout.trim() || 'unknown',
+    });
+  });
 });
 
 // ─── Video Info (get title, thumbnail, formats) ───
@@ -99,14 +117,25 @@ app.get('/api/info', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url parameter.' });
 
-  // Basic URL validation
   try { new URL(url); } catch { return res.status(400).json({ error: 'Invalid URL.' }); }
 
-  const cmd = `yt-dlp --dump-json --no-playlist --no-warnings "${url.replace(/"/g, '')}"`;
-  exec(cmd, { timeout: 30000 }, (err, stdout, stderr) => {
+  const safeUrl = url.replace(/"/g, '');
+
+  // YouTube bot bypass: use iOS player client which doesn't require auth
+  const ytFlags = `--extractor-args "youtube:player_client=ios,mweb" --no-check-certificates`;
+  const cmd = `yt-dlp --dump-json --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`;
+
+  exec(cmd, { timeout: 45000 }, (err, stdout, stderr) => {
     if (err) {
-      const msg = stderr || err.message || 'Could not fetch video info.';
-      return res.status(400).json({ error: msg.split('\n')[0] });
+      const raw = stderr || err.message || 'Could not fetch video info.';
+      // Friendlier error message
+      let msg = raw.split('\n')[0];
+      if (msg.includes('Sign in') || msg.includes('bot')) {
+        msg = 'YouTube is blocking this request. Try a different video or platform.';
+      } else if (msg.includes('not available')) {
+        msg = 'This video is not available (private, geo-restricted or deleted).';
+      }
+      return res.status(400).json({ error: msg });
     }
     try {
       const info = JSON.parse(stdout);
@@ -120,12 +149,12 @@ app.get('/api/info', async (req, res) => {
           .map(f => ({
             format_id: f.format_id,
             ext:       f.ext,
-            quality:   f.format_note || f.height ? `${f.height}p` : f.format_id,
+            quality:   f.format_note || (f.height ? `${f.height}p` : f.format_id),
             filesize:  f.filesize || f.filesize_approx || null,
             hasVideo:  f.vcodec !== 'none',
             hasAudio:  f.acodec !== 'none',
           }))
-          .slice(-30), // keep last 30 formats
+          .slice(-30),
       });
     } catch {
       res.status(500).json({ error: 'Failed to parse video info.' });
@@ -143,12 +172,13 @@ app.get('/api/download', (req, res) => {
   const safeUrl = url.replace(/"/g, '');
   const safeFormat = format.replace(/[^a-zA-Z0-9\[\]+./\-_]/g, '');
 
-  // Build yt-dlp command
+  // YouTube bot bypass flags
+  const ytFlags = `--extractor-args "youtube:player_client=ios,mweb" --no-check-certificates`;
+  // Build yt-dlp command — with YouTube bot bypass
   // -o - : output to stdout so we can stream it
-  // --no-playlist : only download single video
   const cmd = type === 'audio'
-    ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o - --no-playlist --no-warnings "${safeUrl}"`
-    : `yt-dlp -f "${safeFormat}" -o - --no-playlist --no-warnings --merge-output-format mp4 "${safeUrl}"`;
+    ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o - --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`
+    : `yt-dlp -f "${safeFormat}" -o - --no-playlist --no-warnings --merge-output-format mp4 ${ytFlags} "${safeUrl}"`;
 
   const ext = type === 'audio' ? 'mp3' : 'mp4';
   const mime = type === 'audio' ? 'audio/mpeg' : 'video/mp4';
@@ -315,6 +345,9 @@ if (process.env.NODE_ENV !== 'production') {
 app.listen(PORT, () => {
   console.log(`\n✅ Vera Media Tools backend running on http://localhost:${PORT}`);
   console.log(`   API: /api/ppt-to-pdf  /api/word-to-pdf  /api/download  /api/status\n`);
+
+  // Auto-update yt-dlp with latest YouTube fixes on every startup
+  updateYtDlp();
 
   // ─── Self-ping to prevent Render free tier from sleeping ───
   // Render sets RENDER_EXTERNAL_HOSTNAME automatically (e.g. vera-media-tools-backend.onrender.com)
