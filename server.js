@@ -69,55 +69,34 @@ function getTmpDir() {
 
 function cleanUp(...files) {
   files.forEach(f => {
-    try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch {}
+    try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch { }
   });
 }
 
 function cleanUpDir(dir) {
-  try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
+  try { fs.rmSync(dir, { recursive: true, force: true }); } catch { }
 }
 
 // ─── LibreOffice command (optimized flags) ───
+// Each request gets its own user-profile dir so concurrent requests never
+// collide on the same lock file (major speed-up — no more "waiting for lock")
 function libreOfficeCmd(inputPath, outputDir) {
-  // --norestore      : skip crash recovery dialog (saves ~2s)
-  // --nofirststartwizard : skip setup wizard
-  // --nolockcheck    : skip lock file check (faster start)
-  return `libreoffice --headless --norestore --nofirststartwizard --nolockcheck --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
-}
-
-// Pre-warm LibreOffice on startup (loads it into memory so first real request is fast)
-function prewarmLibreOffice() {
-  const tmpDir = getTmpDir();
-  // Create a tiny dummy PPTX (just valid ZIP header bytes aren't enough, so run with invalid file which exits fast but warms JVM/process pool)
-  exec(`libreoffice --headless --norestore --version`, (err, stdout) => {
-    cleanUpDir(tmpDir);
-    if (!err) console.log('[LibreOffice] Pre-warmed:', stdout.trim());
-    else console.warn('[LibreOffice] Pre-warm failed:', err.message);
-  });
-}
-
-// ─── Auto-update yt-dlp on startup ───
-// yt-dlp updates very frequently (YouTube changes often) — always run latest
-function updateYtDlp() {
-  console.log('[yt-dlp] Checking for updates…');
-  exec('pip3 install --break-system-packages --upgrade yt-dlp', (err, stdout) => {
-    if (err) { console.warn('[yt-dlp] Update failed:', err.message); return; }
-    const line = stdout.split('\n').filter(l => l.includes('yt-dlp')).pop() || 'done';
-    console.log('[yt-dlp] Update result:', line.trim());
-  });
+  // --norestore            : skip crash recovery dialog
+  // --nofirststartwizard   : skip first-run setup
+  // --nolockcheck          : skip global lock check
+  // -env:UserInstallation  : per-request isolated profile (no lock conflicts)
+  const profileDir = `file://${outputDir}/lo-profile`;
+  return `libreoffice --headless --norestore --nofirststartwizard --nolockcheck -env:UserInstallation="${profileDir}" --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
 }
 
 // ─── Routes ───
 
-// Health check
+// Health check (no yt-dlp version exec — keep it fast)
 app.get('/api/status', (req, res) => {
-  exec('yt-dlp --version', (err, stdout) => {
-    res.json({
-      status: 'ok',
-      service: 'vera-media-tools-backend',
-      uptime: process.uptime(),
-      ytdlp: stdout.trim() || 'unknown',
-    });
+  res.json({
+    status: 'ok',
+    service: 'vera-media-tools-backend',
+    uptime: process.uptime(),
   });
 });
 
@@ -130,11 +109,17 @@ app.get('/api/info', async (req, res) => {
 
   const safeUrl = url.replace(/"/g, '');
 
-  // YouTube bot bypass: use iOS player client which doesn't require auth
-  const ytFlags = `--extractor-args "youtube:player_client=ios,mweb" --no-check-certificates`;
+  // YouTube bot bypass: tv_embedded+web is most reliable combo in 2025
+  // android/ios are heavily fingerprinted and blocked by Google
+  const ytFlags = [
+    '--extractor-args', 'youtube:player_client=tv_embedded,web',
+    '--no-check-certificates',
+    '--extractor-retries', '3',
+    '--socket-timeout', '20',
+  ].join(' ');
   const cmd = `yt-dlp --dump-json --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`;
 
-  exec(cmd, { timeout: 45000 }, (err, stdout, stderr) => {
+  exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
     if (err) {
       const raw = stderr || err.message || 'Could not fetch video info.';
       // Friendlier error message
@@ -149,19 +134,19 @@ app.get('/api/info', async (req, res) => {
     try {
       const info = JSON.parse(stdout);
       res.json({
-        title:     info.title || 'Unknown',
-        uploader:  info.uploader || info.channel || '',
+        title: info.title || 'Unknown',
+        uploader: info.uploader || info.channel || '',
         thumbnail: info.thumbnail || '',
-        duration:  info.duration || 0,
+        duration: info.duration || 0,
         formats: (info.formats || [])
           .filter(f => f.ext && (f.vcodec !== 'none' || f.acodec !== 'none'))
           .map(f => ({
             format_id: f.format_id,
-            ext:       f.ext,
-            quality:   f.format_note || (f.height ? `${f.height}p` : f.format_id),
-            filesize:  f.filesize || f.filesize_approx || null,
-            hasVideo:  f.vcodec !== 'none',
-            hasAudio:  f.acodec !== 'none',
+            ext: f.ext,
+            quality: f.format_note || (f.height ? `${f.height}p` : f.format_id),
+            filesize: f.filesize || f.filesize_approx || null,
+            hasVideo: f.vcodec !== 'none',
+            hasAudio: f.acodec !== 'none',
           }))
           .slice(-30),
       });
@@ -190,28 +175,34 @@ app.get('/api/download', (req, res) => {
     formatStr = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}]/best`;
   }
 
-  const ext  = type === 'audio' ? 'mp3' : 'mp4';
+  const ext = type === 'audio' ? 'mp3' : 'mp4';
   const mime = type === 'audio' ? 'audio/mpeg' : 'video/mp4';
 
   // Use spawn (not exec) — exec buffers everything, breaks large files
   const { spawn } = require('child_process');
 
+  // Build safe filename: video_vmediatools(quality).ext
+  const qualityLabel = type === 'audio' ? 'audio' : (quality === 'best' ? 'best' : `${quality}p`);
+  const safeFilename = `video_vmediatools(${qualityLabel}).${ext}`;
+
   const args = type === 'audio'
-    ? ['-f', 'bestaudio', '-x', '--audio-format', 'mp3', '--audio-quality', '0',
-       '--no-playlist', '--no-warnings',
-       '--extractor-args', 'youtube:player_client=ios,mweb',
-       '--no-check-certificates', '-o', '-', safeUrl]
+    ? ['-f', 'bestaudio/best', '-x', '--audio-format', 'mp3', '--audio-quality', '0',
+      '--no-playlist', '--no-warnings',
+      '--extractor-args', 'youtube:player_client=tv_embedded,web',
+      '--no-check-certificates', '--extractor-retries', '3',
+      '-o', '-', safeUrl]
     : ['-f', formatStr, '--no-playlist', '--no-warnings',
-       '--merge-output-format', 'mp4',
-       '--extractor-args', 'youtube:player_client=ios,mweb',
-       '--no-check-certificates', '-o', '-', safeUrl];
+      '--merge-output-format', 'mp4',
+      '--extractor-args', 'youtube:player_client=tv_embedded,web',
+      '--no-check-certificates', '--extractor-retries', '3',
+      '-o', '-', safeUrl];
 
   console.log('[download]', type, quality, safeUrl.slice(0, 80));
 
   const child = spawn('yt-dlp', args);
 
   res.setHeader('Content-Type', mime);
-  res.setHeader('Content-Disposition', `attachment; filename="download.${ext}"`);
+  res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
   res.setHeader('Cache-Control', 'no-cache');
 
   child.stdout.pipe(res);
@@ -227,7 +218,7 @@ app.get('/api/download', (req, res) => {
     if (!res.writableEnded) res.end();
   });
 
-  req.on('close', () => { try { child.kill('SIGTERM'); } catch {} });
+  req.on('close', () => { try { child.kill('SIGTERM'); } catch { } });
 });
 
 // PPT to PDF
@@ -352,12 +343,6 @@ if (process.env.NODE_ENV !== 'production') {
 app.listen(PORT, () => {
   console.log(`\n✅ Vera Media Tools backend running on http://localhost:${PORT}`);
   console.log(`   API: /api/ppt-to-pdf  /api/word-to-pdf  /api/download  /api/status\n`);
-
-  // Auto-update yt-dlp with latest YouTube fixes on every startup
-  updateYtDlp();
-
-  // Pre-warm LibreOffice so first request is fast
-  prewarmLibreOffice();
 
   // ─── Self-ping to prevent Render free tier from sleeping ───
   // Render sets RENDER_EXTERNAL_HOSTNAME automatically (e.g. vera-media-tools-backend.onrender.com)

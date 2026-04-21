@@ -109,10 +109,13 @@ function startDownload() {
 
   setStatus(`⬇️ Download started (${type === 'audio' ? 'MP3' : quality === 'best' ? 'Best MP4' : quality + 'p MP4'})… check Downloads folder.`);
 
+  const qualityLabel = type === 'audio' ? 'audio' : (quality === 'best' ? 'best' : `${quality}p`);
+  const ext = type === 'audio' ? 'mp3' : 'mp4';
+  const filename = `video_vmediatools(${qualityLabel}).${ext}`;
+
   const a = document.createElement('a');
   a.href = downloadUrl;
-  a.download = (currentVideoInfo.title + (type === 'audio' ? '.mp3' : '.mp4'))
-    .replace(/[\/\\:*?"<>|]/g, '_').slice(0, 200);
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();

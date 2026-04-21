@@ -84,42 +84,80 @@ changeBtn.addEventListener('click', () => {
   setStatus('Select a PPTX file to begin.');
 });
 
-// ─── Convert via Render backend (XHR for real upload progress) ───
+// ─── Convert via Render backend with LIVE progress simulation ───
 function convertViaServer(file) {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append('file', file);
 
+    // ── Step messages shown during LibreOffice phase ──
+    const convSteps = [
+      'Converting with LibreOffice…',
+      'Rendering slides…',
+      'Embedding fonts…',
+      'Optimising layout…',
+      'Generating pages…',
+      'Almost done…',
+    ];
+    let convTicker = null;
+    let convPct = 55;
+    let convStepIdx = 0;
+
+    function startConvTicker() {
+      convTicker = setInterval(() => {
+        // Creep from 55 → 82 pct over ~30s (max)
+        if (convPct < 82) {
+          // Exponential slowdown so progress feels real
+          const increment = (82 - convPct) * 0.045;
+          convPct = Math.min(82, convPct + Math.max(0.4, increment));
+        }
+        const label = convSteps[convStepIdx % convSteps.length];
+        setProgress(Math.round(convPct), label);
+        convStepIdx++;
+      }, 1200);
+    }
+
+    function stopConvTicker() {
+      if (convTicker) { clearInterval(convTicker); convTicker = null; }
+    }
+
     const xhr = new XMLHttpRequest();
 
-    // Real upload progress
+    // Real upload progress (5 → 50%)
     xhr.upload.addEventListener('progress', (e) => {
       if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 45) + 5; // 5–50%
-        setProgress(pct, `Uploading… ${Math.round(e.loaded/1048576)}/${Math.round(e.total/1048576)} MB`);
+        const pct = Math.round((e.loaded / e.total) * 45) + 5;
+        const mb = (e.loaded / 1048576).toFixed(1);
+        const total = (e.total / 1048576).toFixed(1);
+        setProgress(pct, `Uploading… ${mb} MB / ${total} MB`);
       }
     });
 
     xhr.upload.addEventListener('load', () => {
-      setProgress(55, 'Converting with LibreOffice…');
-      setStatus('Server is converting PPTX → PDF…');
+      setProgress(52, 'Upload complete — starting conversion…');
+      setStatus('LibreOffice is converting your file…');
+      // Small pause then start the live ticker
+      setTimeout(() => { convPct = 55; startConvTicker(); }, 600);
     });
 
     xhr.addEventListener('load', () => {
+      stopConvTicker();
       if (xhr.status === 200) {
-        setProgress(85, 'Downloading PDF…');
+        setProgress(88, 'Packaging PDF…');
         setStatus('Preparing download…');
-        const blob = new Blob([xhr.response], { type: 'application/pdf' });
-        const outputName = file.name.replace(/\.pptx$/i, '.pdf');
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = outputName;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        setProgress(100, 'Done!');
-        setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
-        setTimeout(resetProgress, 3000);
-        resolve();
+        setTimeout(() => {
+          const blob = new Blob([xhr.response], { type: 'application/pdf' });
+          const outputName = file.name.replace(/\.pptx$/i, '.pdf');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = outputName;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          setProgress(100, '✅ Done!');
+          setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
+          setTimeout(resetProgress, 3500);
+          resolve();
+        }, 400);
       } else {
         let msg = `Server error ${xhr.status}`;
         try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
@@ -127,12 +165,12 @@ function convertViaServer(file) {
       }
     });
 
-    xhr.addEventListener('error', () => reject(new Error('Network error — server unreachable')));
-    xhr.addEventListener('timeout', () => reject(new Error('Server timed out')));
+    xhr.addEventListener('error', () => { stopConvTicker(); reject(new Error('Network error — server unreachable')); });
+    xhr.addEventListener('timeout', () => { stopConvTicker(); reject(new Error('Server timed out — try a smaller file')); });
 
     xhr.open('POST', `${RENDER_API}/api/ppt-to-pdf`);
     xhr.responseType = 'arraybuffer';
-    xhr.timeout = 120000; // 2 min max
+    xhr.timeout = 150000; // 2.5 min
     xhr.send(formData);
 
     setProgress(5, 'Uploading…');

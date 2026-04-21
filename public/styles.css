@@ -56,8 +56,10 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
   height: 56px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .site-brand {
@@ -87,6 +89,11 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 1;
   min-width: 0;
   overflow: visible;
+}
+
+@media (max-width: 480px) {
+  .brand-name { display: none; }
+  .header-inner { padding: 0 10px; }
 }
 
 /* nav-link, nav-dd-btn etc. are injected by nav.js */

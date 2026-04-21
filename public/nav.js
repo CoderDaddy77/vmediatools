@@ -138,7 +138,15 @@
           to   { opacity:1; transform: translateY(0); }
         }
         .server-status-label { display: none; }
-        .server-status { padding: 4px 7px; }
+        .server-status { padding: 4px 7px; margin-left: 2px; }
+        #main-nav {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+          flex-wrap: nowrap;
+          gap: 2px;
+        }
+        #main-nav::-webkit-scrollbar { display: none; }
       }
     `;
     document.head.appendChild(s);
@@ -195,11 +203,7 @@
   }
 
   // ─── Build nav ───
-  // Home
-  const home = document.createElement('a');
-  home.href = '/'; home.className = 'nav-link'; home.textContent = 'Home';
-  if (currentPath === '/') home.classList.add('active');
-  nav.appendChild(home);
+  // (Home link removed — brand logo/name already links to /)
 
   // Media Tools dropdown
   nav.appendChild(makeDropdown('🎬 Media', mediaTools));

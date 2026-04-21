@@ -26,6 +26,27 @@ function fmtSize(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
+// ─── Ensure jsPDF is loaded (CDN fallback chain) ───
+async function ensureJsPDF() {
+  if (window.jspdf && window.jspdf.jsPDF) return;
+  const cdns = [
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+    'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+  ];
+  for (const cdn of cdns) {
+    try {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = cdn; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+      if (window.jspdf && window.jspdf.jsPDF) return;
+    } catch {}
+  }
+  throw new Error('Could not load PDF library. Check your internet connection.');
+}
+
 function loadImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -152,9 +173,10 @@ genBtn.addEventListener('click', async () => {
   if (images.length === 0) { setStatus('Add images first.', true); return; }
 
   genBtn.disabled = true;
-  setStatus('Generating PDF…');
+  setStatus('Loading PDF library…');
 
   try {
+    await ensureJsPDF();
     const { jsPDF } = window.jspdf;
     const margin = parseInt(marginSelect.value) || 0;
     const orientation = orientationSelect.value;
@@ -222,7 +244,9 @@ genBtn.addEventListener('click', async () => {
       if (img.file.type === 'image/png') format = 'PNG';
 
       pdf.addImage(img.dataUrl, format, x, y, finalW, finalH);
-      setStatus(`Processing page ${i + 1} of ${images.length}…`);
+      setStatus(`Processing page ${i + 1} of ${images.length}…  (${Math.round(((i+1)/images.length)*100)}%)`);
+      // Yield to browser so UI actually updates
+      await new Promise(r => setTimeout(r, 0));
     }
 
     pdf.save('images-combined.pdf');
