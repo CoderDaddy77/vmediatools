@@ -5,8 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video Downloader – V Media Tools</title>
-  <meta name="description" content="Download videos from YouTube, Instagram, Twitter, TikTok and 1000+ sites. Choose MP4 or MP3, select quality. Free, no signup." />
-  <meta name="keywords" content="video downloader, youtube downloader, instagram downloader, download mp4, download mp3, free video downloader" />
+  <meta name="description"
+    content="Download videos from YouTube, Instagram, Twitter, TikTok and 1000+ sites. Choose MP4 or MP3, select quality. Free, no signup." />
+  <meta name="keywords"
+    content="video downloader, youtube downloader, instagram downloader, download mp4, download mp3, free video downloader" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="/downloader" />
   <link rel="stylesheet" href="/styles.css" />
@@ -28,7 +30,8 @@
       <p class="eyebrow">Video Downloader</p>
       <h1>Download Any Video</h1>
       <p class="subcopy">
-        Paste a URL from YouTube, Instagram, Twitter, TikTok, Facebook or <strong>1000+ sites</strong>. Download as MP4 or extract MP3 audio.
+        Paste a URL from YouTube, Instagram, Twitter, TikTok, Facebook or <strong>1000+ sites</strong>. Download as MP4
+        or extract MP3 audio.
       </p>
     </section>
 
@@ -46,14 +49,8 @@
     <section class="panel dl-panel">
       <!-- URL input -->
       <div class="dl-input-row">
-        <input
-          type="url"
-          id="dl-url"
-          class="dl-url-input"
-          placeholder="Paste video URL here…"
-          autocomplete="off"
-          spellcheck="false"
-        />
+        <input type="url" id="dl-url" class="dl-url-input" placeholder="Paste video URL here…" autocomplete="off"
+          spellcheck="false" />
         <button id="dl-fetch-btn" class="accent dl-fetch-btn" type="button">
           🔍 Fetch
         </button>
@@ -91,7 +88,13 @@
       <!-- Status -->
       <p id="dl-status" class="status">Paste a URL above and click Fetch.</p>
 
-      <!-- Video info card -->
+      <!-- YouTube redirect (minimal) -->
+      <div id="dl-yt-redirect" class="dl-yt-redirect hidden">
+        <a id="dl-yt-btn" href="https://y2mate.ws" target="_blank" rel="noopener">y2mate.ws ↗</a>
+        <button id="dl-yt-copy" class="dl-yt-copy-btn" type="button">Copy link</button>
+      </div>
+
+      <!-- Video info card (non-YouTube) -->
       <div id="dl-info-card" class="dl-info-card hidden">
         <div class="dl-info-inner">
           <img id="dl-thumb" class="dl-thumb" src="" alt="Thumbnail" />

@@ -118,12 +118,19 @@ app.get('/api/info', async (req, res) => {
   exec(cmd, { timeout: 60000 }, (err, stdout, stderr) => {
     if (err) {
       const raw = stderr || err.message || 'Could not fetch video info.';
-      // Friendlier error message
-      let msg = raw.split('\n')[0];
-      if (msg.includes('Sign in') || msg.includes('bot')) {
-        msg = 'YouTube is blocking this request. Try a different video or platform.';
-      } else if (msg.includes('not available')) {
+      let msg = raw.split('\n').find(l => l.trim()) || raw;
+
+      // Detect YouTube-specific bot blocks (only for YT domains)
+      const isYT = /youtu\.?be/.test(safeUrl);
+      if (isYT && (msg.includes('Sign in') || msg.includes('bot') || msg.includes('Precondition'))) {
+        msg = 'YouTube is blocking downloads from this server. Use y2mate.ws instead.';
+      } else if (msg.includes('not available') || msg.includes('unavailable')) {
         msg = 'This video is not available (private, geo-restricted or deleted).';
+      } else if (msg.includes('Unsupported URL') || msg.includes('Unable to extract')) {
+        msg = 'This site is not supported. Try a direct video URL.';
+      } else {
+        // Clean up yt-dlp prefix noise
+        msg = msg.replace(/^ERROR:\s*/i, '').slice(0, 200);
       }
       return res.status(400).json({ error: msg });
     }
