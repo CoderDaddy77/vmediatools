@@ -764,7 +764,7 @@ convertBtn.addEventListener('click', async () => {
 
   try {
     if (fileSizeMB > 28) {
-      setStatus(Large file ( MB) - converting in browser...);
+      setStatus(`Large file (${fileSizeMB.toFixed(1)} MB) — converting in browser…`);
       await convertClientSide(selectedFile);
     } else {
       try {
