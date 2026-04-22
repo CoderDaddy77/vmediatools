@@ -110,8 +110,11 @@ app.get('/api/info', async (req, res) => {
 
   const ytFlags = [
     '--no-check-certificates',
-    '--extractor-retries', '2',
-    '--socket-timeout', '20'
+    '--extractor-retries', '3',
+    '--socket-timeout', '20',
+    '--user-agent', '"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"',
+    '--add-header', '"Accept-Language:en-US,en;q=0.9"',
+    '--add-header', '"Referer:https://www.google.com/"',
   ].join(' ');
   const cmd = `yt-dlp --dump-json --no-playlist --no-warnings ${ytFlags} "${safeUrl}"`;
 
@@ -188,13 +191,19 @@ app.get('/api/download', (req, res) => {
   const qualityLabel = type === 'audio' ? 'audio' : (quality === 'best' ? 'best' : `${quality}p`);
   const safeFilename = `video_vmediatools(${qualityLabel}).${ext}`;
 
+  const commonFlags = [
+    '--no-playlist', '--no-warnings', '--no-check-certificates',
+    '--extractor-retries', '3',
+    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    '--add-header', 'Accept-Language:en-US,en;q=0.9',
+    '--add-header', 'Referer:https://www.google.com/',
+  ];
+
   const args = type === 'audio'
     ? ['-f', 'bestaudio/best', '-x', '--audio-format', 'mp3', '--audio-quality', '0',
-      '--no-playlist', '--no-warnings', '--no-check-certificates',
-      '--extractor-retries', '2', '-o', '-', safeUrl]
-    : ['-f', formatStr, '--no-playlist', '--no-warnings',
-      '--merge-output-format', 'mp4', '--no-check-certificates',
-      '--extractor-retries', '2', '-o', '-', safeUrl];
+      ...commonFlags, '-o', '-', safeUrl]
+    : ['-f', formatStr, '--merge-output-format', 'mp4',
+      ...commonFlags, '-o', '-', safeUrl];
 
   console.log('[download]', type, quality, safeUrl.slice(0, 80));
 
