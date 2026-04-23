@@ -4,18 +4,21 @@
   // ─── Nav data ───
   const mediaTools = [
     { href: '/downloader', label: '⬇️  Video Downloader', render: true },
-    { href: '/mp3',        label: '🎵  Video to MP3' },
-    { href: '/convert',    label: '♫  WAV → MP3' },
     { href: '/compressor', label: '🗜️  Image Compressor' },
-
+    { href: '/bg-remover', label: '✨  Background Remover' },
   ];
 
   const fileTools = [
-    { href: '/ppt-to-pdf',      label: '📊  PPT to PDF',      render: true },
-    { href: '/word-to-pdf',     label: '📝  Word to PDF',     render: true },
     { href: '/images-to-pdf',   label: '🖼️  Images to PDF' },
+    { href: '/word-to-pdf',     label: '📝  Word to PDF',     render: true },
+    { href: '/ppt-to-pdf',      label: '📊  PPT to PDF',      render: true },
+    { href: '/pdf-merger',      label: '🔗  PDF Merger' },
     { href: '/image-converter', label: '🔄  Image Converter' },
+    { href: '/mp3',             label: '🎵  Video to MP3' },
+    { href: '/convert',         label: '♫  WAV → MP3' },
   ];
+
+  // QR Generator is on the homepage — no standalone nav link needed
 
   const nav = document.getElementById('main-nav');
   if (!nav) return;

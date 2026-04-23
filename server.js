@@ -334,6 +334,9 @@ if (process.env.NODE_ENV !== 'production') {
     '/images-to-pdf': '/images-to-pdf.html',
     '/word-to-pdf': '/word-to-pdf.html',
     '/ppt-to-pdf': '/ppt-to-pdf.html',
+    '/qr-generator': '/qr-generator.html',
+    '/pdf-merger': '/pdf-merger.html',
+    '/bg-remover': '/bg-remover.html',
   };
   app.use((req, res) => {
     let reqPath = req.url.split('?')[0];

@@ -41,9 +41,10 @@
 
       <!-- Drop zone — hidden after file is selected -->
       <div id="mp3-drop-zone" class="drop-zone">
-        <p class="drop-label">📂 Drag your video file here</p>
-        <p class="drop-sublabel">or click to browse — MP4, MKV, AVI, MOV, WebM (max 500 MB)</p>
-        <input type="file" id="mp3-file-input" accept="video/*,.mp4,.mkv,.avi,.mov,.webm,.flv,.wmv,.3gp" hidden />
+        <input type="file" id="mp3-file-input" accept="video/*,.mp4,.mkv,.avi,.mov,.webm,.flv,.wmv,.3gp"
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;" />
+        <p class="drop-label" style="pointer-events:none;">📂 Drag your video file here</p>
+        <p class="drop-sublabel" style="pointer-events:none;">or tap to browse — MP4, MKV, AVI, MOV, WebM (max 500 MB)</p>
       </div>
 
       <!-- File info — shown after file is loaded -->

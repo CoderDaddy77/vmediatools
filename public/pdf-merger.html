@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Merger – V Media Tools</title>
+  <meta name="description" content="Merge multiple PDF files into one. Drag, reorder and combine PDFs instantly in your browser. Free, no upload, no signup." />
+  <meta name="keywords" content="pdf merger, merge pdf, combine pdf, join pdf files, pdf combiner, free pdf merger" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="/pdf-merger" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    /* ── PDF list item ── */
+    .pdf-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      margin-bottom: 8px;
+      cursor: grab;
+      transition: background 150ms, box-shadow 150ms;
+      user-select: none;
+    }
+    .pdf-item:active { cursor: grabbing; }
+    .pdf-item.pdf-dragging {
+      opacity: 0.45;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .pdf-item.pdf-drag-over {
+      border-color: var(--accent);
+      background: rgba(198,77,25,0.04);
+    }
+    .pdf-handle {
+      font-size: 1.1rem;
+      color: var(--muted);
+      cursor: grab;
+      flex-shrink: 0;
+    }
+    .pdf-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .pdf-meta { flex: 1; min-width: 0; }
+    .pdf-name {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .pdf-size { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); }
+    .pdf-page-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      background: rgba(0,0,0,0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .pdf-remove {
+      width: auto;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      background: transparent;
+      border: 1px solid rgba(220,38,38,0.3);
+      color: #dc2626;
+      border-radius: 6px;
+      flex-shrink: 0;
+      transition: background 120ms;
+    }
+    .pdf-remove:hover { background: rgba(220,38,38,0.08); transform: none; box-shadow: none; }
+    #pdf-list { margin-top: 16px; }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="site-brand">
+        <img src="/logo.png" alt="V Media Tools Logo" class="brand-logo" />
+        <span class="brand-name">V Media Tools</span>
+      </a>
+      <nav class="site-nav" id="main-nav"></nav>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">File Tool</p>
+      <h1>PDF Merger</h1>
+      <p class="subcopy">
+        Combine multiple PDFs into one — <strong>entirely in your browser</strong>. Drag to reorder pages, then merge and download instantly. Your files never leave your device.
+      </p>
+    </section>
+
+    <section class="panel">
+
+      <!-- Drop zone -->
+      <div id="pdf-drop" class="drop-zone">
+        <input type="file" id="pdf-input" accept=".pdf,application/pdf" multiple
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;" />
+        <p class="drop-label" style="pointer-events:none;">📂 Drag your PDF files here</p>
+        <p class="drop-sublabel" style="pointer-events:none;">or tap to browse — select multiple PDFs at once</p>
+      </div>
+
+      <!-- File list -->
+      <div id="pdf-list" class="hidden"></div>
+
+      <!-- Add more + controls -->
+      <div id="pdf-controls" class="hidden" style="margin-top:18px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+          <button id="pdf-add-more" class="secondary" style="width:auto; padding:10px 20px;">
+            ➕ Add More PDFs
+          </button>
+          <input type="file" id="pdf-input-more" accept=".pdf,application/pdf" multiple hidden />
+          <span style="font-size:0.82rem; color:var(--muted);">Drag items above to reorder</span>
+        </div>
+        <button id="pdf-merge-btn" class="accent" style="width:100%;">
+          🔗 Merge & Download PDF
+        </button>
+      </div>
+
+      <p id="pdf-status" class="status">Select two or more PDF files to begin.</p>
+
+      <div id="pdf-progress-container" class="progress-container hidden">
+        <div class="progress-track">
+          <div id="pdf-progress-fill" class="progress-fill"></div>
+        </div>
+        <p id="pdf-progress-text" class="progress-text">0%</p>
+      </div>
+
+    </section>
+
+    <div class="how-to-use">
+      <div class="htu-step">
+        <strong>Upload PDFs & Reorder</strong>
+        <span>Drop multiple PDFs — drag to set the page order</span>
+      </div>
+      <div class="htu-step">
+        <strong>Merge & Download</strong>
+        <span>Instant client-side merge — no upload, no server, no signup</span>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2026 V Media Tools &mdash; Free &amp; Open Source</p>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/pdf-merger.js"></script>
+  <script>if (history.scrollRestoration) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
+</body>
+
+</html>

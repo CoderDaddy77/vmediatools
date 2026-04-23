@@ -52,7 +52,7 @@ function loadFile(file) {
 }
 
 // Drop zone click
-dropZone.addEventListener('click', () => wavInput.click());
+
 wavInput.addEventListener('change', () => {
   if (wavInput.files[0]) loadFile(wavInput.files[0]);
 });

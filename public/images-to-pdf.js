@@ -219,7 +219,7 @@ function renderList() {
 }
 
 // ── Drop zone ──
-dropZone.addEventListener('click', () => fileInput.click());
+
 fileInput.addEventListener('change', () => { if (fileInput.files.length) addFiles(fileInput.files); });
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));

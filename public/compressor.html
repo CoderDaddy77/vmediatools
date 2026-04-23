@@ -38,9 +38,10 @@
     <section class="panel">
       <!-- Drop Zone -->
       <div id="comp-drop-zone" class="drop-zone">
-        <p class="drop-label">Drag your image here</p>
-        <p class="drop-sublabel">PNG, JPEG, WEBP — or click to browse</p>
-        <input type="file" id="comp-input" accept="image/png,image/jpeg,image/webp,image/jpg" hidden />
+        <input type="file" id="comp-input" accept="image/png,image/jpeg,image/webp,image/jpg"
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;" />
+        <p class="drop-label" style="pointer-events:none;">Drag your image here</p>
+        <p class="drop-sublabel" style="pointer-events:none;">PNG, JPEG, WEBP — or tap to browse</p>
       </div>
 
       <!-- File info shown after upload -->

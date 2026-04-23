@@ -64,7 +64,7 @@ async function loadFile(file) {
 }
 
 // Drop zone
-dropZone.addEventListener('click', () => fileInput.click());
+
 fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); });
 dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));

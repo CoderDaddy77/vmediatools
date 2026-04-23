@@ -62,7 +62,7 @@ function loadFile(file) {
 }
 
 // Drop zone click → open file picker
-dropZone.addEventListener('click', () => fileInput.click());
+
 fileInput.addEventListener('change', () => {
   if (fileInput.files[0]) loadFile(fileInput.files[0]);
 });

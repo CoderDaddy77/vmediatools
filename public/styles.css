@@ -303,6 +303,7 @@ h6 {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
   text-align: left;
+  align-items: start;    /* cards don't stretch to full row height */
 }
 
 .tool-card {
@@ -529,6 +530,8 @@ button {
   color: #fff;
   font-weight: 600;
   border: none;
+  touch-action: manipulation;          /* removes 300ms tap delay on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:hover:not(:disabled) {
@@ -705,7 +708,10 @@ button:disabled {
   border: 2px dashed rgba(0, 0, 0, 0.12);
   border-radius: 14px;
   cursor: pointer;
+  position: relative;                  /* allows file input overlay */
   transition: background 150ms ease, border-color 150ms ease;
+  touch-action: manipulation;          /* removes 300ms tap delay on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .drop-zone:hover,

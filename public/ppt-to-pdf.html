@@ -34,9 +34,10 @@
 
     <section class="panel">
       <div id="ppt-drop" class="drop-zone">
-        <p class="drop-label">📂 Drag your .pptx file here</p>
-        <p class="drop-sublabel">or click to browse — PowerPoint files (.pptx)</p>
-        <input type="file" id="ppt-input" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden />
+        <input type="file" id="ppt-input" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;" />
+        <p class="drop-label" style="pointer-events:none;">📂 Drag your .pptx file here</p>
+        <p class="drop-sublabel" style="pointer-events:none;">or tap to browse — PowerPoint files (.pptx)</p>
       </div>
 
       <div id="ppt-file-info" class="convert-info hidden">

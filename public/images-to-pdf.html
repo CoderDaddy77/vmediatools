@@ -35,9 +35,10 @@
     <section class="panel">
       <!-- Drop Zone -->
       <div id="img2pdf-drop" class="drop-zone">
-        <p class="drop-label">📂 Drag your images here</p>
-        <p class="drop-sublabel">PNG, JPEG, WebP — or click to browse (multiple allowed)</p>
-        <input type="file" id="img2pdf-input" accept="image/png,image/jpeg,image/webp,image/jpg,image/bmp" multiple hidden />
+        <input type="file" id="img2pdf-input" accept="image/png,image/jpeg,image/webp,image/jpg,image/bmp" multiple
+          style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:1;" />
+        <p class="drop-label" style="pointer-events:none;">📂 Drag your images here</p>
+        <p class="drop-sublabel" style="pointer-events:none;">PNG, JPEG, WebP — or tap to browse (multiple allowed)</p>
       </div>
 
       <!-- Image list -->

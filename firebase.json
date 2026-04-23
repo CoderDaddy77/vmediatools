@@ -15,6 +15,9 @@
       { "source": "/images-to-pdf", "destination": "/images-to-pdf.html" },
       { "source": "/word-to-pdf", "destination": "/word-to-pdf.html" },
       { "source": "/ppt-to-pdf", "destination": "/ppt-to-pdf.html" },
+      { "source": "/qr-generator", "destination": "/qr-generator.html" },
+      { "source": "/pdf-merger", "destination": "/pdf-merger.html" },
+      { "source": "/bg-remover", "destination": "/bg-remover.html" },
       { "source": "/about", "destination": "/about.html" }
     ],
     "headers": [
