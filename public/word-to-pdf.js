@@ -95,39 +95,86 @@ changeBtn.addEventListener('click', () => {
   setStatus('Select a DOCX file to begin.');
 });
 
-// ─── Convert via Render backend ───
-async function convertViaServer(file) {
-  setProgress(10, 'Uploading to server…');
-  setStatus('Uploading to server (LibreOffice quality)…');
+// ─── Convert via Render backend with LIVE progress ───
+function convertViaServer(file) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const formData = new FormData();
-  formData.append('file', file);
+    const convSteps = [
+      'Converting with LibreOffice…',
+      'Processing document…',
+      'Embedding fonts…',
+      'Building PDF pages…',
+      'Almost done…',
+    ];
+    let convTicker = null;
+    let convPct = 55;
+    let convStepIdx = 0;
 
-  const response = await fetch(`${RENDER_API}/api/word-to-pdf`, {
-    method: 'POST',
-    body: formData,
+    function startConvTicker() {
+      convTicker = setInterval(() => {
+        if (convPct < 82) {
+          convPct = Math.min(82, convPct + Math.max(0.4, (82 - convPct) * 0.045));
+        }
+        setProgress(Math.round(convPct), convSteps[convStepIdx % convSteps.length]);
+        convStepIdx++;
+      }, 1200);
+    }
+
+    function stopConvTicker() {
+      if (convTicker) { clearInterval(convTicker); convTicker = null; }
+    }
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 45) + 5;
+        const mb = (e.loaded / 1048576).toFixed(1);
+        const total = (e.total / 1048576).toFixed(1);
+        setProgress(pct, `Uploading… ${mb} MB / ${total} MB`);
+      }
+    });
+
+    xhr.upload.addEventListener('load', () => {
+      setProgress(52, 'Upload complete — starting conversion…');
+      setStatus('LibreOffice is converting your file…');
+      setTimeout(() => { convPct = 55; startConvTicker(); }, 600);
+    });
+
+    xhr.addEventListener('load', () => {
+      stopConvTicker();
+      if (xhr.status === 200) {
+        setProgress(88, 'Packaging PDF…');
+        setStatus('Preparing download…');
+        setTimeout(() => {
+          const blob = new Blob([xhr.response], { type: 'application/pdf' });
+          const outputName = file.name.replace(/\.docx$/i, '.pdf');
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = outputName;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          setProgress(100, '✅ Done!');
+          setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — LibreOffice quality`);
+          setTimeout(resetProgress, 3500);
+          resolve();
+        }, 400);
+      } else {
+        let msg = `Server error ${xhr.status}`;
+        try { msg = JSON.parse(new TextDecoder().decode(xhr.response)).error || msg; } catch {}
+        reject(new Error(msg));
+      }
+    });
+
+    xhr.addEventListener('error', () => { stopConvTicker(); reject(new Error('Network error')); });
+    xhr.addEventListener('abort', () => { stopConvTicker(); reject(new Error('Request aborted')); });
+
+    xhr.open('POST', `${RENDER_API}/api/word-to-pdf`);
+    xhr.responseType = 'arraybuffer';
+    xhr.send(formData);
   });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Server error' }));
-    throw new Error(err.error || `Server returned ${response.status}`);
-  }
-
-  setProgress(85, 'Downloading PDF…');
-  const blob = await response.blob();
-  const outputName = file.name.replace(/\.docx$/i, '.pdf');
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = outputName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-  setProgress(100, 'Complete!');
-  setStatus(`✅ PDF downloaded! (${fmtSize(blob.size)}) — converted via LibreOffice`);
-  setTimeout(resetProgress, 4000);
 }
 
 // ─── Client-side fallback (html2canvas + jsPDF) ───

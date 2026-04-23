@@ -5,8 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Image Compressor – V Media Tools</title>
-  <meta name="description" content="Compress PNG and JPEG images to a target file size in KB. Free, instant, no signup. Control quality vs file size." />
-  <meta name="keywords" content="image compressor, compress image online, reduce image size kb, jpeg compressor, png compressor, free image compression" />
+  <meta name="description"
+    content="Compress PNG and JPEG images to a target file size in KB. Free, instant, no signup. Control quality vs file size." />
+  <meta name="keywords"
+    content="image compressor, compress image online, reduce image size kb, jpeg compressor, png compressor, free image compression" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="/compressor" />
   <link rel="stylesheet" href="/styles.css" />
@@ -26,9 +28,10 @@
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">All-in-one Media Tools</p>
-      <h1>Image Compressor</h1>
+      <h1>Image Compressor And Resizer</h1>
       <p class="subcopy">
-        Drop an image and set a target file size in KB. We'll dial quality up or down automatically to hit your target — no visible loss at high targets.
+        Drop an image and set a target file size in KB. We'll dial quality up or down automatically to hit your target —
+        no visible loss at high targets.
       </p>
     </section>
 
@@ -52,39 +55,90 @@
 
       <!-- Controls -->
       <div id="comp-controls" class="hidden" style="margin-top:18px;">
-        <div class="comp-mode-tabs" id="comp-mode-tabs">
-          <button class="comp-tab active" data-mode="target" id="tab-target">Target Size (KB)</button>
-          <button class="comp-tab" data-mode="quality" id="tab-quality">Manual Quality</button>
+
+        <!-- ── Toggle options row ── -->
+        <div class="comp-resize-toggle-row" style="border-top:none; padding-top:0; margin-top:0;">
+          <label class="comp-toggle-label">
+            <input type="checkbox" id="comp-compress-enable" checked />
+            <span class="comp-toggle-track"><span class="comp-toggle-thumb"></span></span>
+            <span>Compress</span>
+          </label>
+          <label class="comp-toggle-label">
+            <input type="checkbox" id="comp-resize-enable" />
+            <span class="comp-toggle-track"><span class="comp-toggle-thumb"></span></span>
+            <span>Resize</span>
+          </label>
         </div>
 
-        <!-- Target KB mode -->
-        <div id="comp-target-mode" class="comp-mode-panel">
-          <div class="comp-kb-row">
-            <div class="control">
-              <label for="comp-target-kb">Target File Size</label>
-              <div class="kb-input-row">
-                <input type="number" id="comp-target-kb" min="1" max="50000" placeholder="e.g. 200" />
-                <span class="kb-unit">KB</span>
+        <!-- Compress panel (mode tabs + options) -->
+        <div id="comp-compress-panel" style="margin-top:14px;">
+          <div class="comp-mode-tabs" id="comp-mode-tabs">
+            <button class="comp-tab active" data-mode="target" id="tab-target">Target Size (KB)</button>
+            <button class="comp-tab" data-mode="quality" id="tab-quality">Manual Quality</button>
+          </div>
+
+          <!-- Target KB mode -->
+          <div id="comp-target-mode" class="comp-mode-panel">
+            <div class="comp-kb-row">
+              <div class="control">
+                <label for="comp-target-kb">Target File Size</label>
+                <div class="kb-input-row">
+                  <input type="number" id="comp-target-kb" min="1" max="50000" placeholder="e.g. 200" />
+                  <span class="kb-unit">KB</span>
+                </div>
               </div>
-            </div>
-            <div class="comp-kb-presets">
-              <p class="comp-presets-label">Quick presets</p>
-              <div class="comp-preset-btns">
-                <button type="button" class="comp-preset" data-kb="50">50 KB</button>
-                <button type="button" class="comp-preset" data-kb="100">100 KB</button>
-                <button type="button" class="comp-preset" data-kb="200">200 KB</button>
-                <button type="button" class="comp-preset" data-kb="500">500 KB</button>
+              <div class="comp-kb-presets">
+                <p class="comp-presets-label">Quick presets</p>
+                <div class="comp-preset-btns">
+                  <button type="button" class="comp-preset" data-kb="50">50 KB</button>
+                  <button type="button" class="comp-preset" data-kb="100">100 KB</button>
+                  <button type="button" class="comp-preset" data-kb="200">200 KB</button>
+                  <button type="button" class="comp-preset" data-kb="500">500 KB</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Manual quality mode -->
-        <div id="comp-quality-mode" class="comp-mode-panel hidden">
-          <div class="control" style="max-width:320px; margin-top:16px;">
-            <label for="comp-quality-slider">Quality: <span id="comp-quality-val">80</span>%</label>
-            <input type="range" id="comp-quality-slider" min="1" max="100" value="80" style="padding:0; border:none; background:none;" />
+          <!-- Manual quality mode -->
+          <div id="comp-quality-mode" class="comp-mode-panel hidden">
+            <div class="control" style="max-width:320px; margin-top:16px;">
+              <label for="comp-quality-slider">Quality: <span id="comp-quality-val">80</span>%</label>
+              <input type="range" id="comp-quality-slider" min="1" max="100" value="80"
+                style="padding:0; border:none; background:none;" />
+            </div><!-- /control -->
+          </div><!-- /comp-quality-mode -->
+        </div><!-- /comp-compress-panel -->
+
+        <div id="comp-resize-panel" class="comp-resize-panel hidden">
+          <div class="comp-resize-presets">
+            <span class="comp-presets-label">Quick sizes</span>
+            <div class="comp-preset-btns">
+              <button type="button" class="comp-preset comp-size-preset comp-size-preset--orig" data-w="orig" data-h="">Original</button>
+              <button type="button" class="comp-preset comp-size-preset" data-w="640" data-h="">640px</button>
+              <button type="button" class="comp-preset comp-size-preset" data-w="800" data-h="">800px</button>
+              <button type="button" class="comp-preset comp-size-preset" data-w="1280" data-h="">HD</button>
+              <button type="button" class="comp-preset comp-size-preset" data-w="1920" data-h="">FHD</button>
+              <button type="button" class="comp-preset comp-size-preset" data-w="3840" data-h="">4K</button>
+            </div>
           </div>
+          <div class="comp-resize-inputs">
+            <div class="comp-resize-field">
+              <label for="comp-resize-w">Width</label>
+              <div class="comp-resize-input-wrap">
+                <input type="number" id="comp-resize-w" min="1" max="8000" placeholder="px" />
+                <span class="comp-resize-unit">px</span>
+              </div>
+            </div>
+            <button type="button" id="comp-lock-btn" class="comp-lock-btn" title="Lock aspect ratio">🔒</button>
+            <div class="comp-resize-field">
+              <label for="comp-resize-h">Height</label>
+              <div class="comp-resize-input-wrap">
+                <input type="number" id="comp-resize-h" min="1" max="8000" placeholder="px" />
+                <span class="comp-resize-unit">px</span>
+              </div>
+            </div>
+          </div>
+          <p id="comp-resize-hint" class="comp-resize-hint"></p>
         </div>
 
         <div class="controls" style="margin-top:18px;">
@@ -113,7 +167,7 @@
             <p id="comp-result-original-size" class="comp-size-badge"></p>
           </div>
           <div class="comp-result-box">
-            <p class="comp-result-label">Compressed</p>
+            <p class="comp-result-label">Output</p>
             <img id="comp-preview-output" class="comp-preview-img" alt="Compressed" />
             <p id="comp-result-output-size" class="comp-size-badge comp-size-badge--green"></p>
           </div>

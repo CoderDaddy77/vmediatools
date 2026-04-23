@@ -329,7 +329,6 @@ if (process.env.NODE_ENV !== 'production') {
   const ROUTES = {
     '/': '/index.html', '/convert': '/convert.html', '/about': '/about.html',
     '/mp3': '/mp3.html', '/compressor': '/compressor.html',
-    '/compressor/video': '/video-compressor.html',
     '/downloader': '/downloader.html',
     '/image-converter': '/image-converter.html',
     '/images-to-pdf': '/images-to-pdf.html',

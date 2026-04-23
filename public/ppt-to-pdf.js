@@ -56,7 +56,11 @@ async function loadFile(file) {
   dropZone.classList.add('hidden');
   fileInfo.classList.remove('hidden');
   controlsEl.classList.remove('hidden');
-  setStatus('File loaded. Click Convert to PDF.');
+  setStatus('Parsing slide previews…');
+  // Show thumbnails in background
+  showSlidePreviews(file)
+    .then(() => setStatus('Ready. Click Convert to PDF.'))
+    .catch(() => setStatus('File loaded. Click Convert to PDF.'));
 }
 
 // Drop zone
@@ -82,6 +86,86 @@ changeBtn.addEventListener('click', () => {
   resetProgress();
   setStatus('Select a PPTX file to begin.');
 });
+
+// ─── Show slide previews at file load time ───
+// Tier 1: PowerPoint per-slide embedded PNGs (rare)
+// Tier 2: docProps/thumbnail.* cover image (present in almost all PPTX)
+// Tier 3: Canvas render of slide XMLs (universal fallback)
+async function showSlidePreviews(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  slidesGrid.innerHTML = '';
+
+  // ── Tier 1: per-slide PNGs ──
+  const slidePngPaths = Object.keys(zip.files)
+    .filter(f => /^ppt\/slides\/slide\d+\.(?:png|jpeg|jpg)$/i.test(f))
+    .sort((a, b) => parseInt(a.match(/slide(\d+)/i)[1]) - parseInt(b.match(/slide(\d+)/i)[1]));
+
+  if (slidePngPaths.length > 0) {
+    for (let i = 0; i < slidePngPaths.length; i++) {
+      const blob = await zip.file(slidePngPaths[i]).async('blob');
+      appendThumb(URL.createObjectURL(blob), i + 1);
+    }
+    slidesPreview.classList.remove('hidden');
+    return;
+  }
+
+  // ── Tier 2: docProps/thumbnail.* (almost always present) ──
+  const thumbPath = Object.keys(zip.files)
+    .find(f => /^docProps\/thumbnail\.(png|jpeg|jpg|wmf|emf)$/i.test(f));
+
+  if (thumbPath) {
+    const ext = thumbPath.split('.').pop().toLowerCase();
+    const mimeOk = ext === 'png' || ext === 'jpeg' || ext === 'jpg';
+    if (mimeOk) {
+      const blob = await zip.file(thumbPath).async('blob');
+      // Show as a single cover card with "Cover" label
+      const url = URL.createObjectURL(blob);
+      const thumb = document.createElement('div');
+      thumb.className = 'ppt-slide-thumb';
+      thumb.style.cssText = 'max-width:280px;';
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.cssText = 'width:100%;display:block;border-radius:0;';
+      img.onload = () => URL.revokeObjectURL(url);
+      const badge = document.createElement('span');
+      badge.className = 'ppt-slide-num';
+      badge.textContent = 'Cover';
+      thumb.appendChild(img);
+      thumb.appendChild(badge);
+      slidesGrid.appendChild(thumb);
+      slidesPreview.classList.remove('hidden');
+      return;
+    }
+  }
+
+  // ── Tier 3: render all slides via canvas ──
+  // reuse existing renderSlidesHighRes and show thumbnails
+  try {
+    const rendered = await renderSlidesHighRes(zip);
+    for (let i = 0; i < rendered.length; i++) {
+      appendThumb(URL.createObjectURL(rendered[i].blob), i + 1);
+    }
+    slidesPreview.classList.remove('hidden');
+  } catch { /* no preview available */ }
+}
+
+function appendThumb(url, num) {
+  const thumb = document.createElement('div');
+  thumb.className = 'ppt-slide-thumb';
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.cssText = 'width:100%;display:block;border-radius:0;';
+  img.onload = () => URL.revokeObjectURL(url);
+  const badge = document.createElement('span');
+  badge.className = 'ppt-slide-num';
+  badge.textContent = num;
+  thumb.appendChild(img);
+  thumb.appendChild(badge);
+  slidesGrid.appendChild(thumb);
+}
+
 
 // ─── Convert via Render backend with LIVE progress simulation ───
 function convertViaServer(file) {
@@ -296,7 +380,8 @@ async function convertClientSide(file) {
 }
 
 // ─── High-res canvas renderer ───
-async function renderSlidesHighRes(zip) {
+// opts: { scale=3, onProgress=setProgress, onSlide=null }
+async function renderSlidesHighRes(zip, opts = {}) {
   const presXml = await zip.file('ppt/presentation.xml')?.async('text');
   if (!presXml) throw new Error('Invalid PPTX — missing presentation.xml');
 
@@ -305,7 +390,8 @@ async function renderSlidesHighRes(zip) {
   const slideW = sldSz ? parseInt(sldSz.getAttribute('cx')) : 9144000;
   const slideH = sldSz ? parseInt(sldSz.getAttribute('cy')) : 6858000;
   const EMU = 914400;
-  const SCALE = 3;          // 3x canvas supersampling → crisp on retina + PDF
+  const SCALE = opts.scale ?? 3;
+  const reportProgress = opts.onProgress || setProgress;
   const PX_PER_IN = 96;
   const px = v => parseInt(v || 0) / EMU * PX_PER_IN; // EMU → px
   const slideWPx = px(slideW);

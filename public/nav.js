@@ -7,7 +7,7 @@
     { href: '/mp3',        label: '🎵  Video to MP3' },
     { href: '/convert',    label: '♫  WAV → MP3' },
     { href: '/compressor', label: '🗜️  Image Compressor' },
-    { href: '/compressor/video', label: '📹  Video Compressor' },
+
   ];
 
   const fileTools = [
