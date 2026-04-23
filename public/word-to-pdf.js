@@ -56,18 +56,24 @@ async function loadFile(file) {
   filesizeEl.textContent = `Size: ${fmtSize(file.size)}`;
   setStatus('Parsing document preview…');
 
+  // Show file info immediately — convert via server works even without preview
+  dropZone.classList.add('hidden');
+  fileInfo.classList.remove('hidden');
+  controlsEl.classList.remove('hidden');
+
   try {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.convertToHtml({ arrayBuffer });
     htmlContent = result.value;
-    previewContent.innerHTML = htmlContent;
-    previewSection.classList.remove('hidden');
-    dropZone.classList.add('hidden');
-    fileInfo.classList.remove('hidden');
-    controlsEl.classList.remove('hidden');
+    if (htmlContent) {
+      previewContent.innerHTML = htmlContent;
+      previewSection.classList.remove('hidden');
+    }
     setStatus('Document ready. Click Convert to PDF.');
   } catch (err) {
-    setStatus('Could not parse document: ' + err.message, true);
+    // Preview failed (e.g. complex DOCX with SmartArt/charts) — server conversion still works
+    console.warn('Mammoth preview error (non-fatal):', err.message);
+    setStatus('Preview unavailable for this file — you can still convert via server. Click Convert to PDF.');
   }
 }
 
