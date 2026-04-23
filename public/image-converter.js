@@ -148,6 +148,11 @@ convertBtn.addEventListener('click', () => {
       return;
     }
 
+    // Revoke previous preview URL to avoid memory leak on repeated conversions
+    if (previewOutput.src && previewOutput.src.startsWith('blob:')) {
+      URL.revokeObjectURL(previewOutput.src);
+    }
+
     const url = URL.createObjectURL(blob);
     previewOutput.src = url;
 

@@ -1,5 +1,5 @@
 // ─── Render backend URL ───
-const RENDER_API = window.RENDER_API_URL || 'https://vera-media-tools-backend.onrender.com';
+const RENDER_API = window.RENDER_API_URL || 'https://vmediatools.onrender.com';
 
 // Word to PDF — tries Render backend first (LibreOffice quality)
 // Falls back to client-side mammoth.js + html2canvas + jsPDF
@@ -174,11 +174,13 @@ function convertViaServer(file) {
       }
     });
 
-    xhr.addEventListener('error', () => { stopConvTicker(); reject(new Error('Network error')); });
-    xhr.addEventListener('abort', () => { stopConvTicker(); reject(new Error('Request aborted')); });
+    xhr.addEventListener('error',   () => { stopConvTicker(); reject(new Error('Network error — server unreachable')); });
+    xhr.addEventListener('abort',   () => { stopConvTicker(); reject(new Error('Request aborted')); });
+    xhr.addEventListener('timeout', () => { stopConvTicker(); reject(new Error('Server timed out — try a smaller file')); });
 
     xhr.open('POST', `${RENDER_API}/api/word-to-pdf`);
     xhr.responseType = 'arraybuffer';
+    xhr.timeout = 150000; // 2.5 min — same as PPT-to-PDF
     xhr.send(formData);
   });
 }

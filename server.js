@@ -85,7 +85,7 @@ function libreOfficeCmd(inputPath, outputDir) {
   // --nofirststartwizard   : skip first-run setup
   // --nolockcheck          : skip global lock check
   // -env:UserInstallation  : per-request isolated profile (no lock conflicts)
-  const profileDir = `file://${outputDir}/lo-profile`;
+  const profileDir = 'file:///' + outputDir.replace(/\\/g, '/') + '/lo-profile';
   return `libreoffice --headless --norestore --nofirststartwizard --nolockcheck -env:UserInstallation="${profileDir}" --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
 }
 
