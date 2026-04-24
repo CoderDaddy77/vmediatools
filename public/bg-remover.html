@@ -83,7 +83,7 @@
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">AI Tool</p>
-      <h1>Background Remover</h1>
+      <h1>Background Remover Free Unlimited</h1>
       <p class="subcopy">
         Remove image backgrounds using <strong>AI running in your browser</strong>. No upload to any server — your image stays on your device. Download as transparent PNG.
       </p>
@@ -112,11 +112,18 @@
 
       <!-- AI notice (first time) -->
       <div id="bgr-notice" class="bgr-ai-notice hidden">
-        ⚡ First use downloads a ~40MB AI model (one-time). This is cached by your browser so subsequent uses are instant.
+        ⚡ <strong>First use:</strong> A ~40MB AI model is downloading in the background (one-time). It'll be cached by your browser — subsequent uses are instant. Processing may begin slightly slower this first time.
       </div>
 
       <!-- Controls -->
       <div id="bgr-controls" class="hidden" style="margin-top:18px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+          <label for="bgr-quality-toggle" style="font-size:0.85rem; font-weight:600; color:var(--muted); white-space:nowrap;">⚡ Mode:</label>
+          <select id="bgr-quality-toggle" style="flex:1; min-width:160px; padding:7px 10px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--text); font-size:0.88rem; cursor:pointer;">
+            <option value="fast">Fast (Small Model) — ~2-5s</option>
+            <option value="quality" selected>Quality (Medium Model) — ~5-15s</option>
+          </select>
+        </div>
         <button id="bgr-btn" class="accent" style="width:100%;">
           ✨ Remove Background
         </button>

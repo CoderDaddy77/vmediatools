@@ -338,6 +338,16 @@ if (process.env.NODE_ENV !== 'production') {
     '/pdf-merger': '/pdf-merger.html',
     '/bg-remover': '/bg-remover.html',
   };
+  const CACHE = {
+    '.wasm': 'public, max-age=31536000, immutable',  // 1 year — never changes without redeploy
+    '.js':   'public, max-age=604800',                // 1 week
+    '.css':  'public, max-age=604800',                // 1 week
+    '.png':  'public, max-age=2592000',               // 30 days
+    '.jpg':  'public, max-age=2592000',
+    '.jpeg': 'public, max-age=2592000',
+    '.svg':  'public, max-age=2592000',
+    '.html': 'public, max-age=3600, must-revalidate', // 1 hour
+  };
   app.use((req, res) => {
     let reqPath = req.url.split('?')[0];
     reqPath = ROUTES[reqPath] || reqPath;
@@ -346,6 +356,7 @@ if (process.env.NODE_ENV !== 'production') {
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Not found' });
     const ext = path.extname(filePath).toLowerCase();
     res.setHeader('Content-Type', MIME[ext] || 'application/octet-stream');
+    if (CACHE[ext]) res.setHeader('Cache-Control', CACHE[ext]);
     res.end(fs.readFileSync(filePath));
   });
 }
